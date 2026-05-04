@@ -1,0 +1,2476 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a1a">
+<title>Show de Avaliação</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#05050f;--surface:#0d0d24;--panel:#111130;
+  --gold:#f5c518;--gold2:#ffd700;
+  --cyan:#00e5ff;--green:#00e676;--red:#ff1744;
+  --white:#ffffff;--muted:#8888aa;--radius:14px;
+  --font-main:'Exo 2',sans-serif;--font-hud:'Rajdhani',sans-serif;
+}
+html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);font-family:var(--font-main);color:var(--white);-webkit-font-smoothing:antialiased}
+
+#stars{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.star{position:absolute;border-radius:50%;background:white;animation:twinkle var(--d,3s) ease-in-out infinite}
+@keyframes twinkle{0%,100%{opacity:var(--a,.3);transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
+
+.screen{position:fixed;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:18px 18px 28px;overflow-y:auto;transition:opacity .35s,transform .35s,visibility .35s}
+.screen.hidden{opacity:0;pointer-events:none;transform:scale(.97);visibility:hidden}
+.screen.centered{justify-content:center}
+
+/* HOME */
+#screen-home{gap:16px;text-align:center;padding-top:24px}
+.logo-wrap{position:relative;display:inline-block}
+.logo-circle{width:140px;height:140px;border-radius:50%;background:conic-gradient(var(--gold),var(--cyan),var(--gold));display:flex;align-items:center;justify-content:center;box-shadow:0 0 50px rgba(245,197,24,.55),0 0 100px rgba(245,197,24,.2);animation:spin-slow 8s linear infinite}
+@keyframes spin-slow{to{transform:rotate(360deg)}}
+.logo-inner{position:absolute;inset:6px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:3.8rem;animation:spin-slow 8s linear infinite reverse}
+.app-title{font-size:clamp(1.7rem,6vw,2.5rem);font-weight:900;background:linear-gradient(135deg,var(--gold2),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:.04em;line-height:1.1}
+
+.status-pill{display:inline-flex;align-items:center;gap:8px;padding:7px 18px;border-radius:50px;font-family:var(--font-hud);font-size:.85rem;font-weight:700;letter-spacing:.06em}
+.status-pill.wait{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.13);color:var(--muted)}
+.status-pill.ok{background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.32);color:var(--green)}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.status-pill.wait .status-dot{background:var(--muted)}
+.status-pill.ok .status-dot{background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.5s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+.user-config{width:100%;max-width:380px;background:var(--panel);border:1px solid rgba(245,197,24,.14);border-radius:var(--radius);padding:11px 13px;display:flex;flex-direction:column;gap:9px}
+.user-config h3{font-family:var(--font-hud);font-size:.78rem;color:var(--gold);letter-spacing:.1em;text-transform:uppercase}
+.cfg-row{display:flex;align-items:center;gap:10px}
+.cfg-label{font-family:var(--font-hud);font-size:.86rem;color:var(--muted);flex:1}
+.name-input{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:10px 13px;color:var(--white);font-family:var(--font-main);font-size:.92rem;outline:none;transition:border-color .2s;width:100%}
+.name-input:focus{border-color:rgba(245,197,24,.45)}
+.name-input::placeholder{color:rgba(255,255,255,.18)}
+
+.btn-main{width:100%;max-width:380px;padding:15px;border-radius:50px;border:none;cursor:pointer;font-family:var(--font-main);font-size:1rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:linear-gradient(135deg,var(--gold),#e6a800);color:#000;box-shadow:0 4px 22px rgba(245,197,24,.38);transition:all .2s;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:6px;line-height:1}
+.btn-main:disabled{opacity:.38;cursor:not-allowed}
+.btn-main:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(245,197,24,.52)}
+.btn-main::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.16),transparent)}
+.btn-sec{padding:11px 26px;border-radius:50px;border:1px solid rgba(255,255,255,.16);background:transparent;color:var(--muted);font-family:var(--font-main);font-size:.87rem;cursor:pointer;transition:all .2s}
+.btn-sec:hover{border-color:rgba(255,255,255,.42);color:var(--white)}
+.btn-ghost{background:transparent;border:1px solid rgba(0,229,255,.22);border-radius:8px;color:var(--cyan);font-family:var(--font-hud);font-size:.78rem;padding:7px 14px;cursor:pointer;transition:all .2s;letter-spacing:.06em}
+.btn-ghost:hover{background:rgba(0,229,255,.08);border-color:rgba(0,229,255,.45)}
+.btn-danger{padding:10px 20px;border-radius:8px;border:1px solid rgba(255,23,68,.28);background:transparent;color:var(--red);font-family:var(--font-main);font-size:.8rem;cursor:pointer;transition:all .2s}
+.btn-danger:hover{background:rgba(255,23,68,.09)}
+.admin-link{font-size:.7rem;color:rgba(255,255,255,.16);cursor:pointer;border:none;background:none;font-family:var(--font-hud);letter-spacing:.06em;transition:color .2s;margin-top:4px}
+.admin-link:hover{color:rgba(255,255,255,.38)}
+
+.qty-btns{display:flex;align-items:center;gap:8px}
+.qty-btn{width:30px;height:30px;border-radius:50%;border:1px solid rgba(245,197,24,.38);background:transparent;color:var(--gold);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.qty-btn:hover{background:rgba(245,197,24,.13)}
+.qty-val{font-family:var(--font-hud);font-size:1.2rem;font-weight:700;color:var(--white);min-width:24px;text-align:center}
+.diff-row{display:flex;gap:7px}
+.diff-btn{flex:1;padding:7px 4px;border-radius:8px;border:1px solid rgba(255,255,255,.11);background:transparent;color:var(--muted);font-family:var(--font-hud);font-size:.77rem;cursor:pointer;transition:all .2s}
+.diff-btn.easy.active{border-color:var(--green);background:rgba(0,230,118,.11);color:var(--green)}
+.diff-btn.medium.active{border-color:var(--gold);background:rgba(245,197,24,.11);color:var(--gold)}
+.diff-btn.hard.active{border-color:var(--red);background:rgba(255,23,68,.11);color:var(--red)}
+
+/* ADMIN LOGIN */
+#screen-admin-login{gap:20px}
+.admin-card{width:100%;max-width:360px;background:var(--panel);border:1px solid rgba(245,197,24,.18);border-radius:var(--radius);padding:26px 22px;display:flex;flex-direction:column;gap:14px}
+.admin-card h2{font-family:var(--font-hud);font-size:1.05rem;font-weight:700;color:var(--gold);letter-spacing:.1em;text-transform:uppercase}
+.admin-card p{font-size:.8rem;color:var(--muted);line-height:1.5;margin-top:-6px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-family:var(--font-hud);font-size:.73rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.field input{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.13);border-radius:8px;padding:10px 12px;color:var(--white);font-family:var(--font-main);font-size:.9rem;outline:none;transition:border-color .2s}
+.field input:focus{border-color:rgba(245,197,24,.42)}
+.field input::placeholder{color:rgba(255,255,255,.16)}
+.err-msg{font-size:.77rem;color:var(--red);display:none}
+.err-msg.show{display:block}
+
+/* ADMIN PANEL */
+#screen-admin-panel{justify-content:flex-start;padding-top:18px;gap:0}
+.admin-panel-wrap{width:100%;max-width:460px;display:flex;flex-direction:column;gap:13px;padding-bottom:24px}
+.admin-header{display:flex;align-items:center;justify-content:space-between;padding-bottom:2px}
+.admin-header h2{font-family:var(--font-hud);font-size:1.05rem;font-weight:700;color:var(--gold);letter-spacing:.08em;text-transform:uppercase}
+.badge-admin{background:rgba(245,197,24,.12);border:1px solid rgba(245,197,24,.28);border-radius:20px;padding:3px 10px;font-family:var(--font-hud);font-size:.68rem;color:var(--gold);letter-spacing:.08em}
+.panel-section{background:var(--panel);border:1px solid rgba(255,255,255,.07);border-radius:var(--radius);padding:15px;display:flex;flex-direction:column;gap:12px}
+.panel-section h3{font-family:var(--font-hud);font-size:.78rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.drop-zone{border:2px dashed rgba(245,197,24,.28);border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:all .25s;background:rgba(245,197,24,.02)}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--gold);background:rgba(245,197,24,.06)}
+.drop-zone input{display:none}
+.drop-icon{font-size:1.5rem;margin-bottom:3px}
+.drop-text{font-size:.79rem;color:var(--muted)}
+.drop-text b{color:var(--gold)}
+.repo-header{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
+.repo-count{font-family:var(--font-hud);font-size:.72rem;color:var(--muted);letter-spacing:.06em}
+.repo-actions{display:flex;gap:6px}
+.repo-list{display:flex;flex-direction:column;gap:5px;max-height:220px;overflow-y:auto}
+.repo-empty{text-align:center;color:var(--muted);font-size:.8rem;padding:12px 0;font-family:var(--font-hud)}
+.repo-item{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:9px 10px;transition:border-color .2s}
+.repo-item.selected{border-color:rgba(0,229,255,.3);background:rgba(0,229,255,.04)}
+.repo-cb{width:16px;height:16px;accent-color:var(--cyan);cursor:pointer;flex-shrink:0}
+.repo-icon{font-size:1rem;flex-shrink:0}
+.repo-info{flex:1;min-width:0}
+.repo-name{font-size:.8rem;color:var(--white);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.repo-size{font-size:.68rem;color:var(--muted);margin-top:1px;font-family:var(--font-hud)}
+.repo-del{cursor:pointer;color:var(--muted);font-size:.85rem;flex-shrink:0;background:none;border:none;padding:3px 5px;border-radius:4px;transition:color .2s}
+.repo-del:hover{color:var(--red)}
+.published-box{background:rgba(0,230,118,.05);border:1px solid rgba(0,230,118,.18);border-radius:10px;padding:11px 13px;display:flex;align-items:center;gap:11px}
+.pub-info{flex:1;min-width:0}
+.pub-label{font-family:var(--font-hud);font-size:.66rem;color:rgba(0,230,118,.6);letter-spacing:.1em;text-transform:uppercase;margin-bottom:1px}
+.pub-name{font-size:.84rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pub-meta{font-size:.7rem;color:var(--muted);margin-top:2px}
+.btn-publish{width:100%;padding:12px;border-radius:10px;border:none;cursor:pointer;font-family:var(--font-main);font-size:.88rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;background:linear-gradient(135deg,var(--green),#00b85a);color:#000;box-shadow:0 3px 14px rgba(0,230,118,.26);transition:all .2s;position:relative;overflow:hidden}
+.btn-publish:disabled{opacity:.38;cursor:not-allowed}
+.btn-publish:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(0,230,118,.36)}
+.btn-publish::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.13),transparent)}
+.btn-logout{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.09);background:transparent;color:var(--muted);font-family:var(--font-main);font-size:.8rem;cursor:pointer;transition:all .2s}
+.btn-logout:hover{border-color:rgba(255,68,68,.32);color:var(--red)}
+.slider-row{display:flex;align-items:center;gap:10px}
+.timer-slider{flex:1;-webkit-appearance:none;height:4px;border-radius:2px;background:rgba(255,255,255,.1);outline:none;cursor:pointer}
+.timer-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--gold);cursor:pointer;box-shadow:0 0 8px rgba(245,197,24,.38)}
+.timer-val{font-family:var(--font-hud);font-size:1.05rem;font-weight:700;color:var(--gold);min-width:38px;text-align:right}
+
+/* LOADING */
+#screen-loading{gap:22px;text-align:center}
+.loader-ring{width:74px;height:74px;border:3px solid rgba(245,197,24,.12);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-txt{font-family:var(--font-hud);font-size:.92rem;color:var(--muted);letter-spacing:.08em}
+.loader-step{font-size:.76rem;color:rgba(255,255,255,.28);margin-top:5px}
+
+/* GAME */
+#screen-game{justify-content:flex-start;padding:11px 13px;gap:0}
+.hud{width:100%;max-width:500px;display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;flex-shrink:0}
+.hud-left{display:flex;flex-direction:column}
+.hud-qnum{font-family:var(--font-hud);font-size:.71rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.hud-prize{font-family:var(--font-hud);font-size:1.22rem;font-weight:700;color:var(--gold)}
+.hud-right{display:flex;gap:6px;align-items:center}
+.timer-wrap{position:relative;width:52px;height:52px;flex-shrink:0}
+.timer-svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.timer-bg{fill:none;stroke:rgba(255,255,255,.07);stroke-width:3}
+.timer-arc{fill:none;stroke:var(--gold);stroke-width:3;stroke-linecap:round;transition:stroke-dashoffset .9s linear,stroke .5s}
+.timer-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-hud);font-size:1.1rem;font-weight:700}
+.helps{display:flex;gap:5px}
+.help-btn{width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(255,255,255,.16);background:var(--panel);font-size:.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;position:relative}
+.help-btn:hover:not(:disabled){border-color:var(--cyan);box-shadow:0 0 10px rgba(0,229,255,.26)}
+.help-btn:disabled{opacity:.26;cursor:not-allowed}
+.help-label{position:absolute;bottom:-17px;left:50%;transform:translateX(-50%);font-size:.5rem;color:var(--muted);white-space:nowrap;font-family:var(--font-hud);letter-spacing:.05em}
+.prog-bar-wrap{width:100%;max-width:500px;height:3px;background:rgba(255,255,255,.07);border-radius:2px;margin-bottom:11px;flex-shrink:0}
+.prog-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold),var(--cyan));transition:width .5s ease}
+.question-card{width:100%;max-width:500px;background:var(--panel);border:1px solid rgba(245,197,24,.12);border-radius:var(--radius);padding:15px 15px 12px;margin-bottom:11px;flex-shrink:0}
+.question-num{font-family:var(--font-hud);font-size:.69rem;color:var(--gold);letter-spacing:.15em;text-transform:uppercase;margin-bottom:7px}
+.question-txt{font-size:clamp(.89rem,3.2vw,.99rem);line-height:1.5;font-weight:600}
+.alts{width:100%;max-width:500px;display:flex;flex-direction:column;gap:8px}
+.alt-btn{width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:var(--white);text-align:left;font-family:var(--font-main);font-size:clamp(.82rem,3vw,.92rem);font-weight:600;cursor:pointer;display:flex;align-items:center;gap:11px;transition:all .17s;position:relative;overflow:hidden}
+.alt-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(245,197,24,.05),transparent);opacity:0;transition:opacity .18s}
+.alt-btn:hover:not(:disabled)::before{opacity:1}
+.alt-btn:hover:not(:disabled){border-color:rgba(245,197,24,.38);transform:translateX(3px)}
+.alt-letter{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-family:var(--font-hud);font-size:.8rem;font-weight:700;flex-shrink:0;transition:all .2s}
+.alt-btn.correct{border-color:var(--green);background:rgba(0,230,118,.1);animation:pulse-c .5s ease}
+.alt-btn.correct .alt-letter{background:var(--green);color:#000;border-color:var(--green)}
+.alt-btn.wrong{border-color:var(--red);background:rgba(255,23,68,.08);animation:shake .4s ease}
+.alt-btn.wrong .alt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.alt-btn.eliminated{opacity:.2}
+@keyframes pulse-c{0%,100%{transform:scale(1)}50%{transform:scale(1.015)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.prize-ladder{position:fixed;right:0;top:0;bottom:0;width:122px;background:rgba(5,5,15,.95);border-left:1px solid rgba(245,197,24,.08);z-index:10;overflow-y:auto;display:none;flex-direction:column;justify-content:center;padding:10px 7px;gap:2px}
+@media(min-width:620px){.prize-ladder{display:flex}}
+.ladder-item{display:flex;align-items:center;justify-content:space-between;padding:5px 7px;border-radius:6px;font-family:var(--font-hud);font-size:.69rem;color:var(--muted);transition:all .3s}
+.ladder-item.milestone{color:var(--gold);font-weight:700}
+.ladder-item.current{background:rgba(245,197,24,.15);border:1px solid rgba(245,197,24,.35);color:var(--white);font-weight:700}
+.ladder-item.passed{color:rgba(255,255,255,.32)}
+
+/* RESULT */
+#screen-result{gap:14px;text-align:center;padding-top:28px}
+.result-player{font-family:var(--font-hud);font-size:.83rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.result-emoji{font-size:3.5rem}
+.result-title{font-size:1.55rem;font-weight:900}
+.result-prize{font-family:var(--font-hud);font-size:2.5rem;font-weight:900;color:var(--gold);text-shadow:0 0 34px rgba(245,197,24,.42)}
+.result-sub{font-size:.84rem;color:var(--muted);max-width:280px}
+.result-stats{display:flex;gap:11px;width:100%;max-width:340px}
+.stat-box{flex:1;background:var(--panel);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:11px 7px}
+.stat-num{font-family:var(--font-hud);font-size:1.35rem;font-weight:700;color:var(--cyan)}
+.stat-lbl{font-size:.66rem;color:var(--muted);margin-top:2px}
+.confetti-wrap{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.conf{position:absolute;top:-10px;border-radius:2px;animation:fall var(--dur,3s) linear var(--delay,0s) forwards}
+@keyframes fall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+
+/* HISTORY */
+#screen-history{justify-content:flex-start;padding-top:18px;gap:0}
+.hist-wrap{width:100%;max-width:460px;display:flex;flex-direction:column;gap:12px;padding-bottom:24px}
+.hist-header{display:flex;align-items:center;justify-content:space-between}
+.hist-header h2{font-family:var(--font-hud);font-size:1.05rem;font-weight:700;color:var(--gold);letter-spacing:.08em;text-transform:uppercase}
+.hist-list{display:flex;flex-direction:column;gap:7px}
+.hist-item{display:flex;align-items:center;gap:11px;background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:11px;padding:11px 12px}
+.hist-rank{font-family:var(--font-hud);font-size:1.05rem;font-weight:900;min-width:26px;text-align:center}
+.hist-rank.r1{color:var(--gold)}
+.hist-rank.r2{color:#c0c0c0}
+.hist-rank.r3{color:#cd7f32}
+.hist-info{flex:1;min-width:0}
+.hist-name{font-size:.88rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hist-meta{font-size:.7rem;color:var(--muted);margin-top:2px}
+.hist-score{text-align:right;flex-shrink:0}
+.hist-pts{font-family:var(--font-hud);font-size:.86rem;font-weight:700;color:var(--gold)}
+.hist-pct{font-size:.7rem;color:var(--muted);margin-top:1px}
+.hist-empty{text-align:center;color:var(--muted);font-size:.86rem;padding:28px 0}
+
+/* OVERLAY */
+.overlay{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .3s}
+.overlay.show{opacity:1;pointer-events:all}
+.modal{background:var(--panel);border:1px solid rgba(245,197,24,.2);border-radius:18px;padding:26px 22px;max-width:360px;width:100%;text-align:center;transform:scale(.92);transition:transform .3s}
+.overlay.show .modal{transform:scale(1)}
+.modal h2{font-size:1.18rem;font-weight:800;margin-bottom:7px}
+.modal p{font-size:.86rem;color:var(--muted);line-height:1.6;margin-bottom:18px}
+.modal-btns{display:flex;flex-direction:column;gap:9px}
+.card-help{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:11px;margin-bottom:10px;text-align:left}
+.card-help-title{font-size:.71rem;color:var(--muted);margin-bottom:4px;font-family:var(--font-hud);letter-spacing:.08em}
+.card-help-txt{font-size:.86rem;font-weight:600}
+
+.toast{position:fixed;top:17px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid rgba(245,197,24,.26);border-radius:50px;padding:8px 19px;font-family:var(--font-hud);font-size:.85rem;font-weight:600;z-index:30;opacity:0;pointer-events:none;transition:opacity .3s;white-space:nowrap}
+.toast.show{opacity:1}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:2px}
+
+/* MEDALHAS */
+.medals-section{width:100%;max-width:380px;display:flex;flex-direction:column;align-items:center;gap:7px}
+.medals-title{font-family:var(--font-hud);font-size:.68rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.medals-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.medal-badge{display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 10px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);min-width:52px;transition:all .3s;opacity:.2;filter:grayscale(1);cursor:default}
+.medal-badge.earned{opacity:1;filter:none;background:rgba(245,197,24,.07);border-color:rgba(245,197,24,.3);box-shadow:0 0 12px rgba(245,197,24,.12)}
+.medal-badge.earned-today{opacity:1;filter:none;background:rgba(0,229,255,.07);border-color:rgba(0,229,255,.3);box-shadow:0 0 12px rgba(0,229,255,.12)}
+.medal-icon{font-size:1.35rem}
+.medal-name{font-family:var(--font-hud);font-size:.54rem;color:var(--muted);letter-spacing:.05em;text-align:center;line-height:1.2}
+.medal-badge.earned .medal-name{color:var(--gold)}
+.medal-badge.earned-today .medal-name{color:var(--cyan)}
+.medal-progress{font-size:.6rem;color:rgba(255,255,255,.22);font-family:var(--font-hud);text-align:center}
+
+/* FEEDBACK PERSONALIZADO */
+.result-feedback{background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.16);border-radius:12px;padding:13px 16px;max-width:320px;font-size:.84rem;line-height:1.6;color:rgba(255,255,255,.88);text-align:center}
+.result-new-medals{display:flex;flex-direction:column;gap:6px;max-width:320px;width:100%}
+.new-medal-item{display:flex;align-items:center;gap:10px;background:rgba(245,197,24,.09);border:1px solid rgba(245,197,24,.32);border-radius:10px;padding:9px 13px;animation:medal-pop .5s ease}
+@keyframes medal-pop{0%{transform:scale(.7);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+.new-medal-item .nmi-icon{font-size:1.4rem;flex-shrink:0}
+.new-medal-item .nmi-txt{font-family:var(--font-hud);font-size:.78rem;color:var(--gold);font-weight:700}
+.new-medal-item .nmi-sub{font-size:.68rem;color:var(--muted)}
+
+/* CRÉDITO */
+.dev-credit{font-size:.6rem;color:var(--green);font-family:var(--font-hud);letter-spacing:.1em;text-align:center;padding-bottom:4px}
+
+/* PROFESSOR IA — CHAT */
+#screen-chat{justify-content:flex-start;padding:0;gap:0}
+.chat-wrap{width:100%;max-width:500px;height:100%;display:flex;flex-direction:column;margin:0 auto}
+.chat-header{padding:13px 16px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;display:flex;align-items:center;gap:11px;background:rgba(5,5,15,.6)}
+.chat-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),#0055ff);display:flex;align-items:center;justify-content:center;font-size:1.35rem;flex-shrink:0;box-shadow:0 0 14px rgba(0,229,255,.3)}
+.chat-title{font-family:var(--font-hud);font-size:.96rem;font-weight:700;color:var(--white)}
+.chat-subtitle{font-size:.68rem;color:var(--cyan);margin-top:1px}
+.chat-back{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.82rem;padding:5px 9px;border-radius:7px;transition:all .2s;font-family:var(--font-hud);margin-right:2px}
+.chat-back:hover{color:var(--white);background:rgba(255,255,255,.07)}
+.chat-chips{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;padding:10px 14px 6px;flex-shrink:0;scrollbar-width:none}
+.chat-chips::-webkit-scrollbar{display:none}
+.chat-chip{background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.32);border-radius:20px;padding:6px 13px;font-family:var(--font-hud);font-size:.72rem;color:var(--cyan);cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;font-weight:600}
+.chat-chip:hover{border-color:rgba(0,229,255,.65);background:rgba(0,229,255,.18)}
+.chat-messages{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:11px}
+.chat-msg{max-width:84%;display:flex;flex-direction:column;gap:4px}
+.chat-msg.user{align-self:flex-end;align-items:flex-end}
+.chat-msg.ai{align-self:flex-start}
+.chat-bubble{padding:10px 14px;border-radius:14px;font-size:.87rem;line-height:1.58;word-break:break-word}
+.chat-msg.user .chat-bubble{background:rgba(245,197,24,.13);border:1px solid rgba(245,197,24,.26);color:var(--white);border-bottom-right-radius:3px}
+.chat-msg.ai .chat-bubble{background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.16);color:var(--white);border-bottom-left-radius:3px}
+.chat-time{font-size:.58rem;color:rgba(255,255,255,.22);font-family:var(--font-hud)}
+.chat-typing-wrap{align-self:flex-start}
+.chat-typing{display:flex;gap:5px;align-items:center;padding:12px 16px;background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.16);border-radius:14px;border-bottom-left-radius:3px}
+.chat-dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);animation:dot-bounce .9s ease-in-out infinite}
+.chat-dot:nth-child(2){animation-delay:.18s}.chat-dot:nth-child(3){animation-delay:.36s}
+@keyframes dot-bounce{0%,100%{transform:translateY(0);opacity:.35}50%{transform:translateY(-6px);opacity:1}}
+.chat-input-row{padding:11px 13px;border-top:1px solid rgba(255,255,255,.08);display:flex;gap:9px;flex-shrink:0;background:rgba(5,5,15,.5)}
+.chat-input{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.13);border-radius:22px;padding:10px 16px;color:var(--white);font-family:var(--font-main);font-size:.88rem;outline:none;transition:border-color .2s}
+.chat-input:focus{border-color:rgba(0,229,255,.42)}
+.chat-input::placeholder{color:rgba(255,255,255,.2)}
+.chat-send{width:42px;height:42px;border-radius:50%;border:none;background:linear-gradient(135deg,var(--cyan),#004cff);color:#fff;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;box-shadow:0 3px 12px rgba(0,229,255,.25)}
+.chat-send:hover:not(:disabled){transform:scale(1.1);box-shadow:0 4px 18px rgba(0,229,255,.4)}
+.chat-send:disabled{opacity:.38;cursor:not-allowed}
+
+/* GRÁFICO DE DESEMPENHO */
+#screen-stats{justify-content:flex-start;padding-top:18px;gap:0}
+.stats-wrap{width:100%;max-width:460px;display:flex;flex-direction:column;gap:13px;padding-bottom:24px}
+.stats-header{display:flex;align-items:center;justify-content:space-between}
+.stats-header h2{font-family:var(--font-hud);font-size:1.05rem;font-weight:700;color:var(--gold);letter-spacing:.08em;text-transform:uppercase}
+.stats-cards{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.stat-card{background:var(--panel);border:1px solid rgba(255,255,255,.07);border-radius:11px;padding:13px}
+.stat-card-val{font-family:var(--font-hud);font-size:1.55rem;font-weight:700;color:var(--cyan)}
+.stat-card-lbl{font-size:.68rem;color:var(--muted);margin-top:3px}
+.chart-section{background:var(--panel);border:1px solid rgba(255,255,255,.07);border-radius:var(--radius);padding:14px 13px}
+.chart-title{font-family:var(--font-hud);font-size:.71rem;color:var(--muted);letter-spacing:.09em;text-transform:uppercase;margin-bottom:13px}
+.chart-bars{display:flex;align-items:flex-end;gap:5px;height:90px}
+.chart-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;height:100%}
+.chart-bar{width:100%;border-radius:4px 4px 0 0;transition:height .5s ease;min-height:3px}
+.chart-bar-pct{font-family:var(--font-hud);font-size:.56rem;color:var(--muted);text-align:center;line-height:1}
+.chart-bar-date{font-size:.54rem;color:rgba(255,255,255,.18);text-align:center;white-space:nowrap;overflow:hidden;max-width:100%}
+.trend-badge{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:20px;font-family:var(--font-hud);font-size:.76rem;font-weight:700}
+.trend-up{background:rgba(0,230,118,.09);border:1px solid rgba(0,230,118,.3);color:var(--green)}
+.trend-down{background:rgba(255,23,68,.08);border:1px solid rgba(255,23,68,.26);color:var(--red)}
+.trend-neutral{background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.25);color:var(--gold)}
+
+/* DESAFIO DIÁRIO */
+.daily-challenge{width:100%;max-width:380px;background:var(--panel);border:1px solid rgba(0,229,255,.16);border-radius:var(--radius);padding:11px 14px;display:flex;align-items:center;gap:12px}
+.daily-icon{font-size:1.4rem;flex-shrink:0}
+.daily-info{flex:1;min-width:0}
+.daily-title{font-family:var(--font-hud);font-size:.68rem;color:var(--cyan);letter-spacing:.09em;text-transform:uppercase;margin-bottom:5px}
+.daily-bar-wrap{height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;margin-bottom:4px}
+.daily-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--cyan),var(--green));transition:width .6s ease}
+.daily-count{font-family:var(--font-hud);font-size:.68rem;color:var(--muted)}
+.daily-done{font-family:var(--font-hud);font-size:.72rem;color:var(--green);font-weight:700}
+
+/* SUGESTÃO DE DIFICULDADE */
+.diff-suggestion{display:none;align-items:center;justify-content:center;gap:8px;padding:8px 14px;border-radius:22px;font-family:var(--font-hud);font-size:.76rem;font-weight:700;width:100%;max-width:380px;cursor:pointer;transition:all .2s;border:none;background:none}
+.diff-suggestion.up{background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.28);color:var(--green)}
+.diff-suggestion.down{background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.24);color:var(--cyan)}
+.diff-suggestion:hover{filter:brightness(1.18);transform:translateY(-1px)}
+
+/* PAINEL DOS PAIS */
+#screen-parent-login{gap:20px}
+#screen-parents{justify-content:flex-start;padding-top:18px;gap:0}
+.parents-wrap{width:100%;max-width:460px;display:flex;flex-direction:column;gap:13px;padding-bottom:24px}
+.parents-header{display:flex;align-items:center;justify-content:space-between}
+.parents-header h2{font-family:var(--font-hud);font-size:1.05rem;font-weight:700;color:var(--cyan);letter-spacing:.08em;text-transform:uppercase}
+.parents-section-title{font-family:var(--font-hud);font-size:.69rem;color:var(--muted);letter-spacing:.09em;text-transform:uppercase}
+.student-card{background:var(--panel);border:1px solid rgba(255,255,255,.07);border-radius:11px;padding:13px 14px;display:flex;flex-direction:column;gap:9px}
+.student-name{font-size:.92rem;font-weight:700;color:var(--white)}
+.student-last{font-size:.67rem;color:var(--muted);font-family:var(--font-hud)}
+.student-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.student-stat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:7px 5px;text-align:center}
+.student-stat-val{font-family:var(--font-hud);font-size:1rem;font-weight:700;color:var(--cyan)}
+.student-stat-lbl{font-size:.6rem;color:var(--muted);margin-top:2px}
+.student-medals{display:flex;gap:5px;flex-wrap:wrap}
+.student-medal-chip{font-size:.62rem;padding:3px 8px;border-radius:10px;background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.22);color:var(--gold);font-family:var(--font-hud)}
+.parent-link{font-size:.7rem;color:#4db8ff;cursor:pointer;border:none;background:none;font-family:var(--font-hud);letter-spacing:.06em;transition:color .2s}
+.parent-link:hover{color:#80cfff}
+.parents-empty{text-align:center;color:var(--muted);font-size:.86rem;padding:28px 0}
+
+/* PAINEL DE EXPLICAÇÃO (resposta errada) */
+.explanation-panel{width:100%;max-width:500px;margin-top:11px;background:rgba(255,23,68,.07);border:1px solid rgba(255,23,68,.28);border-radius:12px;padding:13px 15px;display:none;flex-direction:column;gap:7px;animation:fade-in .35s ease}
+.explanation-panel.show{display:flex}
+@keyframes fade-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.expl-header{display:flex;align-items:center;gap:8px;font-family:var(--font-hud);font-size:.75rem;font-weight:700;letter-spacing:.07em;color:var(--green);text-transform:uppercase}
+.expl-correct{font-size:.88rem;font-weight:700;color:var(--green)}
+.expl-text{font-size:.82rem;color:rgba(255,255,255,.78);line-height:1.55}
+
+/* MOBILE FIX */
+@media(max-width:400px){
+  #screen-home{padding:14px 12px 22px}
+  .logo-circle{width:110px;height:110px}
+  .logo-inner{font-size:3rem}
+  .app-title{font-size:1.55rem}
+  .user-config{padding:12px 11px}
+  .btn-main{padding:13px;font-size:.93rem}
+  .btn-ghost{font-size:.78rem;padding:9px 6px}
+}
+
+/* MODAL DE BOAS-VINDAS */
+.welcome-overlay{position:fixed;inset:0;z-index:100;background:rgba(5,5,15,.88);display:flex;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(6px)}
+.welcome-overlay.hidden{display:none}
+.welcome-card{width:100%;max-width:400px;background:var(--panel);border:1px solid rgba(245,197,24,.22);border-radius:18px;padding:26px 22px;display:flex;flex-direction:column;gap:16px;animation:pop-in .35s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pop-in{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
+.welcome-title{font-size:1.25rem;font-weight:900;background:linear-gradient(135deg,var(--gold2),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-align:center}
+.welcome-steps{display:flex;flex-direction:column;gap:9px}
+.welcome-step{display:flex;align-items:flex-start;gap:10px;font-size:.84rem;line-height:1.45;color:rgba(255,255,255,.82)}
+.welcome-step-icon{font-size:1.1rem;flex-shrink:0;margin-top:1px}
+.welcome-divider{border:none;border-top:1px solid rgba(255,255,255,.07);margin:2px 0}
+.welcome-check{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--muted);cursor:pointer;user-select:none}
+.welcome-check input{width:15px;height:15px;accent-color:var(--cyan);cursor:pointer}
+.welcome-footer{display:flex;align-items:center;justify-content:space-between;gap:10px}
+</style>
+</head>
+<body>
+<div id="stars"></div>
+
+<!-- HOME -->
+<div id="screen-home" class="screen">
+  <div class="logo-wrap">
+    <div class="logo-circle"><div class="logo-inner">🏆</div></div>
+  </div>
+  <div class="app-title">Show de Avaliação</div>
+
+  <div id="statusPill" class="status-pill wait">
+    <span class="status-dot"></span>
+    <span id="statusTxt">Aguardando conteúdo</span>
+  </div>
+
+  <div class="user-config">
+    <h3>⚙️ Configurações</h3>
+    <div class="field">
+      <label>Seu nome</label>
+      <input type="text" id="playerName" class="name-input" placeholder="Digite seu nome..." maxlength="30" autocomplete="off">
+    </div>
+    <div class="cfg-row">
+      <span class="cfg-label">Questões</span>
+      <div class="qty-btns">
+        <button class="qty-btn" onclick="changeUserQty(-5)">−</button>
+        <span class="qty-val" id="userQtyVal">10</span>
+        <button class="qty-btn" onclick="changeUserQty(5)">+</button>
+      </div>
+    </div>
+    <div>
+      <div style="font-family:var(--font-hud);font-size:.74rem;color:var(--muted);margin-bottom:7px;letter-spacing:.08em;text-transform:uppercase">Dificuldade</div>
+      <div class="diff-row">
+        <button class="diff-btn easy"          onclick="setUserDiff('facil',this)">😊 Fácil</button>
+        <button class="diff-btn medium active" onclick="setUserDiff('medio',this)">🎯 Médio</button>
+        <button class="diff-btn hard"          onclick="setUserDiff('dificil',this)">🔥 Difícil</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-main" id="btnPlay" onclick="startGame()" disabled>⚡ JOGAR</button>
+  <div style="display:flex;gap:9px;width:100%;max-width:380px">
+    <button class="btn-ghost" style="flex:1" onclick="showScreen('history')">📊 Pontuações</button>
+    <button class="btn-ghost" style="flex:1" onclick="showScreen('stats')">📈 Desempenho</button>
+    <button class="btn-ghost" style="flex:1" onclick="showScreen('chat')">💬 Professor</button>
+  </div>
+
+  <!-- Desafio do Dia -->
+  <div class="daily-challenge" id="dailyChallenge">
+    <div class="daily-icon">📅</div>
+    <div class="daily-info">
+      <div class="daily-title">Desafio do Dia</div>
+      <div class="daily-bar-wrap"><div class="daily-bar-fill" id="dailyBarFill" style="width:0%"></div></div>
+      <div class="daily-count" id="dailyCount">0/5 questões hoje</div>
+    </div>
+  </div>
+  <button class="diff-suggestion" id="diffSuggestion" onclick="applyDiffSuggestion()"></button>
+
+  <!-- Medalhas do aluno -->
+  <div class="medals-section">
+    <div class="medals-title">🏅 Suas Medalhas</div>
+    <div class="medals-row" id="medalsRow"></div>
+    <div class="medal-progress" id="medalProgress"></div>
+  </div>
+
+  <div class="dev-credit">Desenvolvido por Lobo</div>
+  <button class="admin-link" onclick="showScreen('admin-login')">Área do Responsável</button>
+</div>
+
+<!-- ADMIN LOGIN -->
+<div id="screen-admin-login" class="screen centered">
+  <div class="admin-card">
+    <h2>🔐 Área Restrita</h2>
+    <p id="loginHint">Acesso exclusivo para o responsável pela avaliação.</p>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="err-msg" id="loginErr"></div>
+    <button class="btn-main" style="max-width:100%" onclick="doLogin()" id="loginBtn">Entrar</button>
+    <button class="btn-sec" style="width:100%;text-align:center" onclick="showScreen('home')">← Voltar</button>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="screen-admin-panel" class="screen">
+  <div class="admin-panel-wrap">
+    <div class="admin-header">
+      <h2>Painel do Responsável</h2>
+      <span class="badge-admin">ADMIN</span>
+    </div>
+
+    <!-- API KEY -->
+    <div class="panel-section">
+      <h3>🔑 Chave de API</h3>
+      <div class="field">
+        <label>Google Gemini API Key</label>
+        <input type="password" id="apiKeyInput" placeholder="AIza..." autocomplete="off"
+          oninput="saveApiKey(this.value)" style="font-size:.77rem;letter-spacing:.04em">
+      </div>
+      <div style="font-size:.71rem;color:var(--muted);line-height:1.5">
+        Gratuita em <b style="color:var(--cyan)">aistudio.google.com</b> → Obter Chave de API
+      </div>
+      <div style="border-top:1px solid rgba(255,255,255,.06);margin-top:4px;padding-top:12px">
+        <div class="field">
+          <label>Firebase Database URL <span style="color:rgba(255,255,255,.22);font-size:.65rem;text-transform:none;letter-spacing:0">(opcional — para histórico compartilhado)</span></label>
+          <input type="text" id="firebaseUrlInput" placeholder="https://seu-projeto-default-rtdb.firebaseio.com" autocomplete="off"
+            oninput="saveFirebaseUrl(this.value)" style="font-size:.74rem">
+        </div>
+        <div style="font-size:.7rem;color:var(--muted);line-height:1.6">
+          Gratuito em <b style="color:var(--cyan)">console.firebase.google.com</b> → Realtime Database → Regras: <code style="background:rgba(255,255,255,.06);padding:1px 4px;border-radius:3px;font-size:.68rem">".read":true,".write":true</code>
+        </div>
+        <div id="firebaseStatus" style="font-size:.71rem;margin-top:5px"></div>
+      </div>
+      <div style="border-top:1px solid rgba(255,255,255,.06);margin-top:4px;padding-top:12px">
+        <div class="field">
+          <label>URL pública do app <span style="color:rgba(255,255,255,.22);font-size:.65rem;text-transform:none;letter-spacing:0">(endereço onde os alunos abrem)</span></label>
+          <input type="text" id="appUrlInput" placeholder="https://showdeavaliacao.netlify.app" autocomplete="off"
+            oninput="saveAppUrl(this.value)" style="font-size:.74rem">
+        </div>
+        <div style="font-size:.7rem;color:var(--muted);line-height:1.5">
+          Necessário para gerar o link de compartilhamento correto quando o admin abre o arquivo localmente.
+        </div>
+        <div id="appUrlStatus" style="font-size:.71rem;margin-top:5px"></div>
+      </div>
+    </div>
+
+    <!-- REPOSITÓRIO DE ARQUIVOS -->
+    <div class="panel-section">
+      <h3>📚 Repositório de Arquivos</h3>
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <input type="file" id="fileInput" accept=".pdf,.txt" multiple>
+        <div class="drop-icon">📂</div>
+        <div class="drop-text">Clique ou arraste <b>PDF / TXT</b> (um ou mais)</div>
+      </div>
+      <div class="repo-header">
+        <span class="repo-count" id="repoCount">0 arquivo(s) no repositório</span>
+        <div class="repo-actions">
+          <button class="btn-ghost" style="font-size:.7rem;padding:5px 10px" onclick="repoSelectAll(true)">✓ Todos</button>
+          <button class="btn-ghost" style="font-size:.7rem;padding:5px 10px" onclick="repoSelectAll(false)">✗ Nenhum</button>
+        </div>
+      </div>
+      <div class="repo-list" id="repoList">
+        <div class="repo-empty">Nenhum arquivo no repositório.</div>
+      </div>
+    </div>
+
+    <!-- CONFIG QUIZ -->
+    <div class="panel-section">
+      <h3>⚙️ Configurações do Quiz</h3>
+      <div class="cfg-row">
+        <span class="cfg-label">Quantidade de questões</span>
+        <div class="qty-btns">
+          <button class="qty-btn" onclick="changeQty(-5)">−</button>
+          <span class="qty-val" id="qtyVal">10</span>
+          <button class="qty-btn" onclick="changeQty(5)">+</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-family:var(--font-hud);font-size:.74rem;color:var(--muted);margin-bottom:7px;letter-spacing:.08em;text-transform:uppercase">Dificuldade</div>
+        <div class="diff-row">
+          <button class="diff-btn easy"          onclick="setDiff('facil',this)">😊 Fácil</button>
+          <button class="diff-btn medium active" onclick="setDiff('medio',this)">🎯 Médio</button>
+          <button class="diff-btn hard"          onclick="setDiff('dificil',this)">🔥 Difícil</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-family:var(--font-hud);font-size:.74rem;color:var(--muted);margin-bottom:8px;letter-spacing:.08em;text-transform:uppercase">Tempo por questão</div>
+        <div class="slider-row">
+          <span style="font-size:.78rem;color:var(--muted);font-family:var(--font-hud)">10s</span>
+          <input type="range" id="timerSlider" class="timer-slider" min="10" max="90" step="5" value="30"
+            oninput="updateTimerSetting(this.value)">
+          <span style="font-size:.78rem;color:var(--muted);font-family:var(--font-hud)">90s</span>
+          <span class="timer-val" id="timerValLabel">30s</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PUBLICADO -->
+    <div class="panel-section">
+      <h3>✅ Conteúdo Publicado</h3>
+      <div class="published-box" id="publishedBox">
+        <span id="pubIcon" style="font-size:1.4rem">📭</span>
+        <div class="pub-info">
+          <div class="pub-label">Status</div>
+          <div class="pub-name" id="pubName" style="color:var(--muted);font-weight:400">Nenhum conteúdo publicado</div>
+          <div class="pub-meta" id="pubMeta"></div>
+        </div>
+      </div>
+      <button class="btn-publish" id="btnPublish" onclick="publishContent()" disabled>🚀 GERAR E PUBLICAR</button>
+      <button class="btn-danger" id="btnUnpublish" onclick="unpublishContent()" style="display:none">🗑️ Remover conteúdo publicado</button>
+      <div id="shareUrlBox" style="display:none;background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.18);border-radius:9px;padding:11px 13px">
+        <div style="font-family:var(--font-hud);font-size:.67rem;color:rgba(0,229,255,.8);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px">🔗 URL para compartilhar com os alunos</div>
+        <div id="shareUrlTxt" onclick="copyShareUrl()" style="font-size:.72rem;color:var(--cyan);word-break:break-all;cursor:pointer;line-height:1.6;padding:6px 8px;background:rgba(0,0,0,.2);border-radius:6px"></div>
+        <div style="font-size:.66rem;color:var(--muted);margin-top:5px">Toque no link para copiar · Inclui o endereço do banco de dados</div>
+      </div>
+    </div>
+
+    <!-- GERENCIAR HISTÓRICO -->
+    <div class="panel-section">
+      <h3>🗑️ Gerenciar Histórico</h3>
+      <button class="btn-danger" onclick="confirmClearHistory()">Limpar todo o histórico de pontuações</button>
+    </div>
+
+    <!-- SEGURANÇA -->
+    <div class="panel-section">
+      <h3>🔒 Segurança</h3>
+      <div class="field">
+        <label id="secAdminLbl">Alterar senha do admin</label>
+        <input type="password" id="newAdminPass" placeholder="Nova senha..." autocomplete="new-password">
+      </div>
+      <button class="btn-ghost" style="width:100%;justify-content:center" onclick="changeAdminPass()">Salvar senha do admin</button>
+    </div>
+
+    <button class="btn-logout" onclick="doLogout()">← Sair da área do responsável</button>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div id="screen-loading" class="screen centered">
+  <div class="loader-ring"></div>
+  <div>
+    <div class="loader-txt" id="loaderTxt">Analisando o conteúdo...</div>
+    <div class="loader-step" id="loaderStep">Lendo o arquivo enviado</div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="screen-game" class="screen">
+  <div class="hud">
+    <div class="hud-left">
+      <span class="hud-qnum" id="hudQNum">Questão 1 de 10</span>
+      <span class="hud-prize" id="hudPrize">R$ 1.000</span>
+    </div>
+    <div class="hud-right">
+      <div class="helps">
+        <button class="help-btn" id="help50"   onclick="useHelp('50')"  >5️⃣0️⃣<span class="help-label">50/50</span></button>
+        <button class="help-btn" id="helpPovo" onclick="useHelp('povo')">👥<span class="help-label">Povo</span></button>
+        <button class="help-btn" id="helpUniv" onclick="useHelp('univ')">🎓<span class="help-label">Especialistas</span></button>
+      </div>
+      <div class="timer-wrap">
+        <svg class="timer-svg" viewBox="0 0 54 54">
+          <circle class="timer-bg" cx="27" cy="27" r="23"/>
+          <circle class="timer-arc" id="timerArc" cx="27" cy="27" r="23" stroke-dasharray="144.5" stroke-dashoffset="0"/>
+        </svg>
+        <div class="timer-num" id="timerNum">30</div>
+      </div>
+    </div>
+  </div>
+  <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progBar" style="width:0%"></div></div>
+  <div class="question-card">
+    <div class="question-num" id="qNumLabel">PERGUNTA 01</div>
+    <div class="question-txt" id="questionTxt">Carregando...</div>
+  </div>
+  <div class="alts" id="altsContainer"></div>
+  <div class="explanation-panel" id="explanationPanel">
+    <div class="expl-header">💡 Resposta correta</div>
+    <div class="expl-correct" id="explCorrect"></div>
+    <div class="expl-text" id="explText"></div>
+    <button class="expl-ok-btn" onclick="endGame(false,false)">Entendido, continuar →</button>
+  </div>
+  <div class="prize-ladder" id="prizeLadder"></div>
+</div>
+
+<!-- RESULT -->
+<div id="screen-result" class="screen centered">
+  <div class="confetti-wrap" id="confettiWrap"></div>
+  <div class="result-player" id="resultPlayer"></div>
+  <div class="result-emoji"  id="resultEmoji">🏆</div>
+  <div class="result-title"  id="resultTitle">Parabéns!</div>
+  <div class="result-prize"  id="resultPrize">R$ 0</div>
+  <div class="result-sub"    id="resultSub"></div>
+  <div class="result-stats">
+    <div class="stat-box"><div class="stat-num" id="statCorrect">0</div><div class="stat-lbl">Acertos</div></div>
+    <div class="stat-box"><div class="stat-num" id="statPct">0%</div><div class="stat-lbl">Aproveitamento</div></div>
+    <div class="stat-box"><div class="stat-num" id="statHelps">0</div><div class="stat-lbl">Ajudas</div></div>
+  </div>
+  <!-- Feedback personalizado -->
+  <div id="resultFeedback" class="result-feedback" style="display:none"></div>
+  <!-- Novas medalhas conquistadas -->
+  <div id="resultNewMedals" class="result-new-medals"></div>
+  <button class="btn-main" style="max-width:280px" onclick="restartGame()">🔄 Jogar Novamente</button>
+  <button class="btn-sec" onclick="goHome()">🏠 Início</button>
+</div>
+
+<!-- HISTORY -->
+<div id="screen-history" class="screen">
+  <div class="hist-wrap">
+    <div class="hist-header">
+      <h2>📊 Pontuações</h2>
+      <button class="btn-ghost" onclick="goHome()">← Voltar</button>
+    </div>
+    <div class="hist-list" id="historyList">
+      <div class="hist-empty">Nenhuma partida registrada ainda.</div>
+    </div>
+  </div>
+</div>
+
+<!-- PROFESSOR IA -->
+<div id="screen-chat" class="screen">
+  <div class="chat-wrap">
+    <div class="chat-header">
+      <button class="chat-back" onclick="goHome()">← Voltar</button>
+      <div class="chat-avatar">🎓</div>
+      <div>
+        <div class="chat-title">Professor Lobo</div>
+        <div class="chat-subtitle">Assistente do 6º ano</div>
+      </div>
+    </div>
+    <div class="chat-chips">
+      <span class="chat-chip" onclick="insertChip('Como resolver frações?')">➗ Frações</span>
+      <span class="chat-chip" onclick="insertChip('O que é concordância verbal?')">📝 Concordância</span>
+      <span class="chat-chip" onclick="insertChip('O que são ecossistemas?')">🌿 Ecossistemas</span>
+      <span class="chat-chip" onclick="insertChip('Como resolver equações simples?')">📐 Equações</span>
+      <span class="chat-chip" onclick="insertChip('O que estuda a anatomia humana?')">🧬 Anatomia</span>
+      <span class="chat-chip" onclick="insertChip('O que são propriedades da matéria?')">⚗️ Matéria</span>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-msg ai">
+        <div class="chat-bubble">Olá! 👋 Sou seu <b>Professor Lobo</b>! Estou aqui para te ajudar com as matérias do 6º ano.<br><br>Pode me perguntar sobre <b>Matemática</b>, <b>Português</b>, <b>Ciências</b>, <b>História</b> e muito mais. Use os atalhos acima ou escreva sua dúvida! 📚</div>
+        <span class="chat-time">Professor Lobo</span>
+      </div>
+    </div>
+    <div class="chat-input-row">
+      <input type="text" id="chatInput" class="chat-input" placeholder="Escreva sua dúvida..." maxlength="300"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey)sendChatMessage()">
+      <button class="chat-send" id="chatSendBtn" onclick="sendChatMessage()">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- DESEMPENHO -->
+<div id="screen-stats" class="screen">
+  <div class="stats-wrap">
+    <div class="stats-header">
+      <h2>📈 Meu Desempenho</h2>
+      <button class="btn-ghost" onclick="goHome()">← Voltar</button>
+    </div>
+    <div class="stats-cards" id="statsCards">
+      <div class="stat-card"><div class="stat-card-val">—</div><div class="stat-card-lbl">Partidas jogadas</div></div>
+      <div class="stat-card"><div class="stat-card-val">—</div><div class="stat-card-lbl">Média de acertos</div></div>
+      <div class="stat-card"><div class="stat-card-val">—</div><div class="stat-card-lbl">Melhor resultado</div></div>
+      <div class="stat-card"><div class="stat-card-val">—</div><div class="stat-card-lbl">Questões respondidas</div></div>
+    </div>
+    <div class="chart-section">
+      <div class="chart-title">Últimas partidas — aproveitamento (%)</div>
+      <div class="chart-bars" id="chartBars">
+        <div style="color:var(--muted);font-size:.8rem;text-align:center;width:100%;align-self:center">Nenhuma partida ainda.</div>
+      </div>
+    </div>
+    <div id="statsTrend"></div>
+  </div>
+</div>
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2 id="modalTitle"></h2>
+    <div id="modalBody"></div>
+    <div class="modal-btns" id="modalBtns"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- BOAS-VINDAS -->
+<div class="welcome-overlay hidden" id="welcomeOverlay">
+  <div class="welcome-card">
+    <div class="welcome-title">🎉 Bem-vindo ao Show de Avaliação!</div>
+    <div class="welcome-steps">
+      <div class="welcome-step"><span class="welcome-step-icon">📝</span><span>Digite seu <b>nome</b> e escolha quantas questões quer responder.</span></div>
+      <div class="welcome-step"><span class="welcome-step-icon">⚡</span><span>Clique em <b>JOGAR</b> e responda as questões de múltipla escolha.</span></div>
+      <div class="welcome-step"><span class="welcome-step-icon">🆘</span><span>Use as <b>ajudas</b>: Eliminar 50/50, Universitários e Povo.</span></div>
+      <div class="welcome-step"><span class="welcome-step-icon">🏅</span><span>Ganhe <b>medalhas</b> conforme acumula questões respondidas.</span></div>
+      <div class="welcome-step"><span class="welcome-step-icon">🤖</span><span>O <b>Professor Lobo</b> tira dúvidas sobre as matérias do 6º ano.</span></div>
+      <div class="welcome-step"><span class="welcome-step-icon">📅</span><span>Complete o <b>Desafio do Dia</b>: responda 5 questões por dia!</span></div>
+    </div>
+    <hr class="welcome-divider">
+    <div class="welcome-footer">
+      <label class="welcome-check"><input type="checkbox" id="welcomeNoShow"> Não mostrar novamente</label>
+      <button class="btn-main" style="max-width:140px;padding:11px 18px" onclick="closeWelcome()">Começar! →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ESTRELAS
+(function(){
+  var w=document.getElementById('stars');
+  for(var i=0;i<80;i++){
+    var s=document.createElement('div');s.className='star';
+    var sz=Math.random()*2+.5;
+    s.style.cssText='width:'+sz+'px;height:'+sz+'px;left:'+Math.random()*100+'%;top:'+Math.random()*100+'%;--a:'+(Math.random()*.5+.1)+';--d:'+(Math.random()*4+2)+'s;animation-delay:'+(Math.random()*4)+'s';
+    w.appendChild(s);
+  }
+})();
+
+// Senhas removidas do código — armazenadas como hash SHA-256 no Firebase/localStorage
+
+var state={
+  apiKey:null,
+  firebaseUrl:null,
+  appUrl:null,
+  adminHash:null,   // SHA-256 da senha do admin
+  fileRepository:[], // [{id,name,type,content,size,selected}]
+  qty:10,difficulty:'medio',timerSecs:30,
+  userQty:10,userDifficulty:'medio',
+  published:null,
+  questions:[],
+  current:0,score:0,
+  helps:{'50':true,povo:true,univ:true},helpsUsed:0,
+  timer:null,timeLeft:30,totalTime:0,answered:false,
+  prizes:[],checkpoints:[],
+  playerName:'',
+  // Progresso e medalhas
+  totalAnswered:0,
+  medals:[],
+  lastPlayDate:null
+};
+
+// Gera escada de prêmios dinâmica: sempre de R$1.000 a R$1.000.000
+function makePrizes(qty){
+  if(qty===1)return[1000000];
+  var result=[];
+  for(var i=0;i<qty;i++){
+    var t=i/(qty-1);
+    var raw=1000*Math.pow(1000,t); // escala log de 1k a 1M
+    // Arredonda para número bonito
+    var v;
+    if(raw>=500000)     v=Math.round(raw/100000)*100000;
+    else if(raw>=100000)v=Math.round(raw/50000)*50000;
+    else if(raw>=10000) v=Math.round(raw/5000)*5000;
+    else if(raw>=1000)  v=Math.round(raw/500)*500;
+    else                v=Math.round(raw/100)*100;
+    result.push(Math.max(1000,v));
+  }
+  result[qty-1]=1000000; // garante topo exato
+  return result;
+}
+// Checkpoints (zonas seguras): ~1/3 e ~2/3 do total
+function makeCheckpoints(qty){
+  return[Math.floor(qty/3)-1, Math.floor(2*qty/3)-1].filter(function(i){return i>=0;});
+}
+
+// Definição das medalhas
+var MEDALS=[
+  {id:'bronze',    threshold:10,  icon:'🥉', name:'Bronze',      desc:'10 questões respondidas'},
+  {id:'prata',     threshold:30,  icon:'🥈', name:'Prata',       desc:'30 questões respondidas'},
+  {id:'ouro',      threshold:50,  icon:'🥇', name:'Ouro',        desc:'50 questões respondidas'},
+  {id:'diamante',  threshold:100, icon:'💎', name:'Diamante',    desc:'100 questões respondidas'},
+  {id:'diario',    threshold:-1,  icon:'⭐', name:'Participação',desc:'5 questões em um dia'}
+];
+
+function fmt(v){return 'R$ '+v.toLocaleString('pt-BR');}
+
+// CONFIG DO USUÁRIO
+function changeUserQty(d){
+  var max=state.published?state.published.qty:30;
+  state.userQty=Math.min(max,Math.max(5,state.userQty+d));
+  document.getElementById('userQtyVal').textContent=state.userQty;
+}
+function setUserDiff(d,btn){
+  state.userDifficulty=d;
+  document.querySelectorAll('#screen-home .diff-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+}
+
+// LOGIN ADMIN
+async function doLogin(){
+  var p=document.getElementById('loginPass').value;
+  var err=document.getElementById('loginErr');
+  if(!p){err.textContent='Digite uma senha.';err.classList.add('show');return;}
+
+  // Primeira vez: sem hash cadastrado → cria a senha
+  if(!state.adminHash){
+    var h=await hashPass(p);
+    state.adminHash=h;
+    await fbSavePasswords(h,state.parentHash||'');
+    document.getElementById('loginPass').value='';
+    err.classList.remove('show');
+    showToast('✅ Senha de admin criada com sucesso!');
+    _enterAdmin();
+    return;
+  }
+
+  var h=await hashPass(p);
+  if(h===state.adminHash){
+    err.classList.remove('show');
+    document.getElementById('loginPass').value='';
+    _enterAdmin();
+  }else{
+    err.textContent='Senha incorreta.';
+    err.classList.add('show');
+    document.getElementById('loginPass').value='';
+  }
+}
+function _enterAdmin(){
+  loadApiKey(true);
+  loadFirebaseUrl();
+  loadAppUrl();
+  loadTimerSetting();
+  renderRepoList();
+  updateAdminPanel();
+  updateSecurityForm();
+  showScreen('admin-panel');
+}
+function doLogout(){showScreen('home');}
+async function changeAdminPass(){
+  var v=(document.getElementById('newAdminPass').value||'').trim();
+  if(!v){showToast('Digite a nova senha!');return;}
+  if(v.length<4){showToast('Senha deve ter pelo menos 4 caracteres.');return;}
+  state.adminHash=await hashPass(v);
+  await fbSavePasswords(state.adminHash,state.parentHash||'');
+  document.getElementById('newAdminPass').value='';
+  updateSecurityForm();
+  showToast('✅ Senha do admin atualizada!');
+}
+async function changeParentPass(){
+  var v=(document.getElementById('newParentPass').value||'').trim();
+  if(!v){showToast('Digite a nova senha dos pais!');return;}
+  if(v.length<4){showToast('Senha deve ter pelo menos 4 caracteres.');return;}
+  state.parentHash=await hashPass(v);
+  await fbSavePasswords(state.adminHash||'',state.parentHash);
+  document.getElementById('newParentPass').value='';
+  showToast('✅ Senha dos pais atualizada!');
+}
+
+function unpublishContent(){
+  showModal('🗑️ Remover conteúdo','<p>Tem certeza? Os alunos não poderão mais jogar até um novo conteúdo ser publicado.</p>',
+    [{label:'Sim, remover',action:async function(){
+      state.published=null;
+      if(state.firebaseUrl)await fbUnpublish();
+      try{localStorage.removeItem('show_published');}catch(e){}
+      document.getElementById('pubIcon').textContent='📭';
+      document.getElementById('pubName').textContent='Nenhum conteúdo publicado';
+      document.getElementById('pubName').style.color='var(--muted)';
+      document.getElementById('pubName').style.fontWeight='400';
+      document.getElementById('pubMeta').textContent='';
+      document.getElementById('btnUnpublish').style.display='none';
+      updateHomeStatus();
+      updateShareUrl();
+      closeModal();
+      showToast('Conteúdo removido!');
+    }},{label:'Cancelar',action:closeModal}]);
+}
+
+// SEGURANÇA — hash SHA-256 via Web Crypto API
+async function hashPass(str){
+  var buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+}
+async function fbSavePasswords(adminHash,parentHash){
+  var obj={a:adminHash,p:parentHash||''};
+  try{localStorage.setItem('show_sec',JSON.stringify(obj));}catch(e){}
+  if(!state.firebaseUrl)return;
+  try{await fetch(state.firebaseUrl+'/config/sec.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)});}catch(e){}
+}
+async function loadPasswords(){
+  // Tenta Firebase primeiro
+  if(state.firebaseUrl){
+    try{
+      var r=await fetch(state.firebaseUrl+'/config/sec.json');
+      var d=await r.json();
+      if(d&&d.a){state.adminHash=d.a;state.parentHash=d.p||'';try{localStorage.setItem('show_sec',JSON.stringify(d));}catch(e){}return;}
+    }catch(e){}
+  }
+  // Fallback: localStorage
+  try{
+    var s=JSON.parse(localStorage.getItem('show_sec')||'null');
+    if(s&&s.a){state.adminHash=s.a;state.parentHash=s.p||'';}
+  }catch(e){}
+}
+function updateSecurityForm(){
+  // Atualiza visual do formulário de senhas no painel admin
+  var hasAdmin=!!state.adminHash;
+  var lbl=document.getElementById('secAdminLbl');
+  if(lbl)lbl.textContent=hasAdmin?'Alterar senha do admin':'Criar senha do admin';
+}
+
+// CHAVE DE API
+async function fbSaveApiKey(key){
+  if(!state.firebaseUrl||!key)return;
+  try{await fetch(state.firebaseUrl+'/config/apikey.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(key)});}catch(e){}
+}
+async function fbLoadApiKey(){
+  if(!state.firebaseUrl)return null;
+  try{
+    var r=await fetch(state.firebaseUrl+'/config/apikey.json');
+    var d=await r.json();
+    return(typeof d==='string'&&d)?d:null;
+  }catch(e){return null;}
+}
+function saveApiKey(val){
+  state.apiKey=val.trim();
+  try{localStorage.setItem('show_gemini_key',val.trim());}catch(e){}
+  fbSaveApiKey(val.trim());
+}
+function loadApiKey(syncFirebase){
+  try{
+    var k=localStorage.getItem('show_gemini_key')||'';
+    if(k){
+      state.apiKey=k;
+      var el=document.getElementById('apiKeyInput');if(el)el.value=k;
+      if(syncFirebase)fbSaveApiKey(k); // sincroniza chave existente com Firebase
+    }
+  }catch(e){}
+}
+
+// BOAS-VINDAS
+function showWelcome(){
+  var skip=false;
+  try{skip=localStorage.getItem('show_welcome_skip')==='1';}catch(e){}
+  if(!skip){
+    var ov=document.getElementById('welcomeOverlay');
+    if(ov)ov.classList.remove('hidden');
+  }
+}
+function closeWelcome(){
+  var cb=document.getElementById('welcomeNoShow');
+  if(cb&&cb.checked){try{localStorage.setItem('show_welcome_skip','1');}catch(e){}}
+  var ov=document.getElementById('welcomeOverlay');
+  if(ov)ov.classList.add('hidden');
+}
+
+// FIREBASE
+function saveFirebaseUrl(val){
+  state.firebaseUrl=val.trim().replace(/\/$/,'');
+  try{localStorage.setItem('show_firebase_url',state.firebaseUrl);}catch(e){}
+  updateFirebaseStatus();
+}
+function loadFirebaseUrl(){
+  // Parâmetro ?fb= na URL tem prioridade (link compartilhado)
+  try{
+    var fb=(new URLSearchParams(window.location.search)).get('fb');
+    if(fb){
+      state.firebaseUrl=fb.trim().replace(/\/$/,'');
+      try{localStorage.setItem('show_firebase_url',state.firebaseUrl);}catch(e){}
+    }
+  }catch(e){}
+  // Fallback: localStorage
+  if(!state.firebaseUrl){
+    try{var u=localStorage.getItem('show_firebase_url')||'';if(u)state.firebaseUrl=u;}catch(e){}
+  }
+  try{var inp=document.getElementById('firebaseUrlInput');if(inp&&state.firebaseUrl)inp.value=state.firebaseUrl;}catch(e){}
+  updateFirebaseStatus();
+}
+function updateFirebaseStatus(){
+  var el=document.getElementById('firebaseStatus');
+  if(!el)return;
+  if(state.firebaseUrl){
+    el.innerHTML='<span style="color:var(--green)">✓ Compartilhamento ativado</span>';
+  }else{
+    el.innerHTML='<span style="color:var(--muted)">○ Sem Firebase — dados locais por dispositivo</span>';
+  }
+}
+// Firebase: conteúdo publicado
+async function fbSavePublished(pub){
+  try{
+    var r=await fetch(state.firebaseUrl+'/show_published.json',{
+      method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(pub)
+    });
+    return r.ok;
+  }catch(e){return false;}
+}
+async function fbLoadPublished(){
+  try{
+    var r=await fetch(state.firebaseUrl+'/show_published.json');
+    if(!r.ok)return null;
+    var d=await r.json();
+    return(d&&d.questions)?d:null;
+  }catch(e){return null;}
+}
+async function fbUnpublish(){
+  try{await fetch(state.firebaseUrl+'/show_published.json',{method:'DELETE'});}catch(e){}
+}
+async function loadPublishedFromFirebase(){
+  if(!state.firebaseUrl)return;
+  var pub=await fbLoadPublished();
+  if(pub){state.published=pub;updateHomeStatus();}
+}
+// URL pública do app
+function saveAppUrl(val){
+  state.appUrl=val.trim().replace(/\/$/,'');
+  try{localStorage.setItem('show_app_url',state.appUrl);}catch(e){}
+  updateAppUrlStatus();
+}
+function loadAppUrl(){
+  try{var u=localStorage.getItem('show_app_url')||'';if(u){state.appUrl=u;var inp=document.getElementById('appUrlInput');if(inp)inp.value=u;}}catch(e){}
+  updateAppUrlStatus();
+}
+function updateAppUrlStatus(){
+  var el=document.getElementById('appUrlStatus');
+  if(!el)return;
+  if(state.appUrl){
+    el.innerHTML='<span style="color:var(--green)">✓ Link de compartilhamento usa: <b>'+state.appUrl+'</b></span>';
+  }else{
+    el.innerHTML='<span style="color:rgba(255,165,0,.8)">⚠ Sem URL pública — link usará o endereço atual (pode não funcionar)</span>';
+  }
+}
+function getShareBaseUrl(){
+  // Usa URL pública configurada pelo admin; fallback para window.location apenas se for https
+  if(state.appUrl)return state.appUrl;
+  var loc=window.location;
+  if(loc.protocol==='https:'||loc.protocol==='http:'){
+    return loc.origin+(loc.pathname==='/'?'':loc.pathname.replace(/\/$/,''));
+  }
+  return null; // arquivo local — sem base válida
+}
+// URL para compartilhar
+function updateShareUrl(){
+  var el=document.getElementById('shareUrlBox');
+  var txt=document.getElementById('shareUrlTxt');
+  if(!el||!txt)return;
+  if(state.firebaseUrl&&state.published&&state.published.questions&&state.published.questions.length>0){
+    var base=getShareBaseUrl();
+    if(!base){
+      // Arquivo aberto localmente sem URL pública configurada
+      txt.innerHTML='<span style="color:var(--gold)">Configure a <b>URL pública do app</b> acima para gerar o link.</span>';
+      el.style.display='block';
+      return;
+    }
+    var url=base+'?fb='+encodeURIComponent(state.firebaseUrl);
+    txt.textContent=url;
+    el.style.display='block';
+  }else{
+    el.style.display='none';
+  }
+}
+function copyShareUrl(){
+  var url=(document.getElementById('shareUrlTxt')||{}).textContent||'';
+  if(!url)return;
+  navigator.clipboard.writeText(url).then(function(){showToast('🔗 URL copiada!');}).catch(function(){showToast('Copie manualmente: '+url);});
+}
+async function fbSaveScore(entry){
+  try{
+    var r=await fetch(state.firebaseUrl+'/show_history.json',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(entry)
+    });
+    return r.ok;
+  }catch(e){return false;}
+}
+async function fbLoadHistory(){
+  try{
+    var r=await fetch(state.firebaseUrl+'/show_history.json');
+    if(!r.ok)return null;
+    var data=await r.json();
+    if(!data)return [];
+    return Object.values(data);
+  }catch(e){return null;}
+}
+async function fbClearHistory(){
+  try{
+    var r=await fetch(state.firebaseUrl+'/show_history.json',{method:'DELETE'});
+    return r.ok;
+  }catch(e){return false;}
+}
+
+// CRONÔMETRO
+function updateTimerSetting(val){
+  state.timerSecs=parseInt(val);
+  document.getElementById('timerValLabel').textContent=val+'s';
+  try{localStorage.setItem('show_timer_secs',val);}catch(e){}
+}
+function loadTimerSetting(){
+  try{
+    var v=localStorage.getItem('show_timer_secs');
+    if(v){
+      state.timerSecs=parseInt(v);
+      document.getElementById('timerSlider').value=v;
+      document.getElementById('timerValLabel').textContent=v+'s';
+    }
+  }catch(e){}
+}
+
+// REPOSITÓRIO DE ARQUIVOS
+var dz=document.getElementById('dropZone');
+var fi=document.getElementById('fileInput');
+dz.addEventListener('dragover',function(e){e.preventDefault();dz.classList.add('drag-over');});
+dz.addEventListener('dragleave',function(){dz.classList.remove('drag-over');});
+dz.addEventListener('drop',function(e){
+  e.preventDefault();dz.classList.remove('drag-over');
+  if(e.dataTransfer.files.length)addFilesToRepo(e.dataTransfer.files);
+});
+fi.addEventListener('change',function(){if(fi.files.length)addFilesToRepo(fi.files);fi.value='';});
+
+function fmtSize(bytes){
+  if(bytes<1024)return bytes+'B';
+  if(bytes<1024*1024)return (bytes/1024).toFixed(1)+'KB';
+  return (bytes/(1024*1024)).toFixed(1)+'MB';
+}
+
+function addFilesToRepo(files){
+  var added=0;
+  var pending=files.length;
+  Array.from(files).forEach(function(file){
+    var ext=file.name.split('.').pop().toLowerCase();
+    if(ext!=='pdf'&&ext!=='txt'){pending--;showToast('Ignorado: '+file.name+' (use PDF ou TXT)');return;}
+    // Evita duplicata por nome
+    if(state.fileRepository.find(function(f){return f.name===file.name;})){
+      pending--;showToast('Já existe: '+file.name);return;
+    }
+    var id='f'+Date.now()+Math.random().toString(36).slice(2,6);
+    if(ext==='pdf'){
+      var r=new FileReader();
+      r.onload=function(e){
+        state.fileRepository.push({id:id,name:file.name,type:'pdf',content:e.target.result.split(',')[1],size:fmtSize(file.size),selected:true});
+        added++;pending--;
+        if(pending===0){saveRepo();renderRepoList();showToast(added+' arquivo(s) adicionado(s)!');}
+      };
+      r.readAsDataURL(file);
+    }else{
+      var r2=new FileReader();
+      r2.onload=function(e){
+        state.fileRepository.push({id:id,name:file.name,type:'txt',content:e.target.result,size:fmtSize(file.size),selected:true});
+        added++;pending--;
+        if(pending===0){saveRepo();renderRepoList();showToast(added+' arquivo(s) adicionado(s)!');}
+      };
+      r2.readAsText(file);
+    }
+  });
+}
+
+function removeFromRepo(id){
+  state.fileRepository=state.fileRepository.filter(function(f){return f.id!==id;});
+  saveRepo();renderRepoList();updatePublishBtn();
+}
+
+function toggleRepoItem(id,checked){
+  var f=state.fileRepository.find(function(f){return f.id===id;});
+  if(f){f.selected=checked;updatePublishBtn();}
+  renderRepoList();
+}
+
+function repoSelectAll(val){
+  state.fileRepository.forEach(function(f){f.selected=val;});
+  renderRepoList();updatePublishBtn();
+}
+
+function renderRepoList(){
+  var list=document.getElementById('repoList');
+  var count=document.getElementById('repoCount');
+  var sel=state.fileRepository.filter(function(f){return f.selected;}).length;
+  count.textContent=state.fileRepository.length+' arquivo(s) — '+sel+' selecionado(s)';
+  if(!state.fileRepository.length){
+    list.innerHTML='<div class="repo-empty">Nenhum arquivo no repositório.</div>';
+    updatePublishBtn();return;
+  }
+  list.innerHTML=state.fileRepository.map(function(f){
+    return '<div class="repo-item'+(f.selected?' selected':'')+'">'+
+      '<input type="checkbox" class="repo-cb" '+(f.selected?'checked':'')+' onchange="toggleRepoItem(\''+f.id+'\',this.checked)">'+
+      '<span class="repo-icon">'+(f.type==='pdf'?'📄':'📝')+'</span>'+
+      '<div class="repo-info"><div class="repo-name" title="'+f.name+'">'+f.name+'</div>'+
+      '<div class="repo-size">'+f.size+' · '+f.type.toUpperCase()+'</div></div>'+
+      '<button class="repo-del" onclick="removeFromRepo(\''+f.id+'\')" title="Remover">✕</button>'+
+    '</div>';
+  }).join('');
+  updatePublishBtn();
+}
+
+function updatePublishBtn(){
+  var hasSel=state.fileRepository.some(function(f){return f.selected;});
+  document.getElementById('btnPublish').disabled=!hasSel;
+}
+
+function saveRepo(){
+  try{localStorage.setItem('show_file_repo',JSON.stringify(state.fileRepository));}
+  catch(e){showToast('Aviso: repositório grande demais para salvar localmente.');}
+}
+
+function loadRepo(){
+  try{
+    var saved=localStorage.getItem('show_file_repo');
+    if(saved){state.fileRepository=JSON.parse(saved);renderRepoList();}
+  }catch(e){}
+}
+function changeQty(d){
+  state.qty=Math.min(30,Math.max(5,state.qty+d));
+  document.getElementById('qtyVal').textContent=state.qty;
+}
+function setDiff(d,btn){
+  state.difficulty=d;
+  document.querySelectorAll('#screen-admin-panel .diff-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+}
+
+// PUBLICAR — gera questões na hora e salva no Firebase
+async function publishContent(){
+  var sel=state.fileRepository.filter(function(f){return f.selected;});
+  if(!sel.length){showToast('Selecione ao menos um arquivo!');return;}
+  if(!state.apiKey){showToast('Configure a Chave de API primeiro!');return;}
+
+  showScreen('loading');
+  var si=0;
+  var steps=[
+    ['Analisando o conteúdo...','Preparando banco de questões'],
+    ['Identificando temas-chave...','Mapeando assuntos principais'],
+    ['Criando as questões...','Gerando alternativas inteligentes'],
+    ['Calibrando dificuldade...','Nível: '+(state.difficulty==='facil'?'Fácil 😊':state.difficulty==='medio'?'Médio 🎯':'Difícil 🔥')],
+    ['Quase pronto...','Salvando no servidor']
+  ];
+  var iv=setInterval(function(){
+    if(si<steps.length){
+      document.getElementById('loaderTxt').textContent=steps[si][0];
+      document.getElementById('loaderStep').textContent=steps[si][1];
+      si++;
+    }
+  },1400);
+
+  try{
+    var questions=await callGeminiAPI(sel,state.qty,state.difficulty,function(txt,sub){
+      document.getElementById('loaderTxt').textContent=txt;
+      document.getElementById('loaderStep').textContent=sub;
+    });
+    clearInterval(iv);
+
+    document.getElementById('loaderTxt').textContent='Publicando...';
+    document.getElementById('loaderStep').textContent='Salvando '+questions.length+' questões';
+
+    var pub={
+      name:sel.length===1?sel[0].name:sel.length+' arquivos',
+      qty:state.qty,difficulty:state.difficulty,timerSecs:state.timerSecs,
+      questions:questions,publishedAt:Date.now()
+    };
+    state.published=pub;
+
+    if(state.firebaseUrl){
+      var ok=await fbSavePublished(pub);
+      if(!ok)showToast('Aviso: falha ao salvar no Firebase');
+    }
+    try{localStorage.setItem('show_published',JSON.stringify(pub));}catch(e){}
+
+    showScreen('admin-panel');
+    updateAdminPanel();
+    updateHomeStatus();
+    updateShareUrl();
+    showToast('✅ '+questions.length+' questões publicadas!');
+
+  }catch(err){
+    clearInterval(iv);
+    showScreen('admin-panel');
+    var ik=err.message.indexOf('Chave')>=0||err.message.indexOf('401')>=0||err.message.indexOf('403')>=0||err.message.indexOf('API_KEY')>=0;
+    showModal('Erro ao publicar',
+      '<p>'+(ik?'Chave de API inválida. Verifique em <b>Chave de API</b>.':'Não foi possível gerar as questões.')+'<br><small style="color:var(--muted);font-size:.7rem">'+err.message+'</small></p>',
+      [{label:'OK',action:closeModal}]);
+  }
+}
+function updateAdminPanel(){
+  if(!state.published)return;
+  var pub=state.published;
+  document.getElementById('pubIcon').textContent='✅';
+  var nm=document.getElementById('pubName');
+  nm.textContent=pub.name;nm.style.color='';nm.style.fontWeight='700';
+  var qCount=(pub.questions&&pub.questions.length)?pub.questions.length+' questões geradas':'';
+  document.getElementById('pubMeta').textContent=
+    (qCount?qCount+'  |  ':'')+
+    pub.qty+' máx  |  '+(pub.difficulty==='facil'?'Fácil':pub.difficulty==='medio'?'Médio':'Difícil')+
+    '  |  '+pub.timerSecs+'s por questão';
+  document.getElementById('btnUnpublish').style.display='block';
+  document.getElementById('qtyVal').textContent=pub.qty;
+  state.qty=pub.qty;
+  state.difficulty=pub.difficulty;
+  document.querySelectorAll('#screen-admin-panel .diff-btn').forEach(function(b){b.classList.remove('active');});
+  var activeBtn=document.querySelector('#screen-admin-panel .diff-btn.'+
+    (pub.difficulty==='facil'?'easy':pub.difficulty==='medio'?'medium':'hard'));
+  if(activeBtn)activeBtn.classList.add('active');
+  updateShareUrl();
+}
+function updateHomeStatus(){
+  var pill=document.getElementById('statusPill');
+  var txt=document.getElementById('statusTxt');
+  var btn=document.getElementById('btnPlay');
+
+  if(state.published){
+    pill.className='status-pill ok';
+    txt.textContent='Conteúdo disponível ✓';
+    btn.disabled=false;
+    var mx=state.published.qty;
+    if(state.userQty>mx){state.userQty=mx;document.getElementById('userQtyVal').textContent=mx;}
+  }else{
+    pill.className='status-pill wait';
+    txt.textContent='Aguardando conteúdo';
+    btn.disabled=true;
+  }
+}
+
+// PROGRESSO E MEDALHAS
+function loadProgress(){
+  try{
+    var p=JSON.parse(localStorage.getItem('show_progress')||'{}');
+    state.totalAnswered=p.totalAnswered||0;
+    state.medals=p.medals||[];
+    state.lastPlayDate=p.lastPlayDate||null;
+  }catch(e){state.totalAnswered=0;state.medals=[];state.lastPlayDate=null;}
+  renderMedals();
+}
+
+function saveProgress(){
+  try{
+    localStorage.setItem('show_progress',JSON.stringify({
+      totalAnswered:state.totalAnswered,
+      medals:state.medals,
+      lastPlayDate:state.lastPlayDate
+    }));
+  }catch(e){}
+}
+
+function checkMedals(total){
+  var earned=[];
+  MEDALS.forEach(function(m){
+    if(m.threshold>0&&total>=m.threshold&&state.medals.indexOf(m.id)<0){
+      state.medals.push(m.id);
+      earned.push(m);
+    }
+  });
+  return earned;
+}
+
+function checkDailyChallenge(correct){
+  var today=new Date().toLocaleDateString('pt-BR');
+  try{
+    var key='show_daily_'+today;
+    var cnt=parseInt(localStorage.getItem(key)||'0')+correct;
+    localStorage.setItem(key,String(cnt));
+    if(cnt>=5){
+      // Medalha diária: pode ganhar uma vez por dia
+      if(state.lastPlayDate!==today&&state.medals.indexOf('diario')<0){
+        state.medals.push('diario');
+        state.lastPlayDate=today;
+        return true;
+      }
+      // Renova a medalha diária no dia seguinte
+      if(state.lastPlayDate!==today){
+        var idx=state.medals.indexOf('diario');
+        if(idx<0){state.medals.push('diario');}
+        state.lastPlayDate=today;
+        return true;
+      }
+    }
+  }catch(e){}
+  return false;
+}
+
+function renderMedals(){
+  var el=document.getElementById('medalsRow');
+  var prog=document.getElementById('medalProgress');
+  if(!el)return;
+  var today=new Date().toLocaleDateString('pt-BR');
+  el.innerHTML=MEDALS.map(function(m){
+    var earned=state.medals.indexOf(m.id)>=0;
+    var earnedToday=(m.id==='diario')&&earned&&(state.lastPlayDate===today);
+    var cls='medal-badge'+(earnedToday?' earned-today':earned?' earned':'');
+    return '<div class="'+cls+'" title="'+m.name+' — '+m.desc+'">'+
+      '<span class="medal-icon">'+m.icon+'</span>'+
+      '<span class="medal-name">'+m.name+'</span>'+
+    '</div>';
+  }).join('');
+  // Progresso até próxima medalha
+  if(prog){
+    var next=null;
+    for(var i=0;i<MEDALS.length;i++){
+      if(MEDALS[i].threshold>0&&state.medals.indexOf(MEDALS[i].id)<0){next=MEDALS[i];break;}
+    }
+    if(next){prog.textContent=state.totalAnswered+'/'+next.threshold+' questões → '+next.icon+' '+next.name;}
+    else{prog.textContent='🏆 Todas as medalhas conquistadas!';}
+  }
+}
+
+function getPersonalizedFeedback(pct){
+  if(pct===100)return '🌟 Incrível! Você acertou tudo! Continue assim, você é um campeão!';
+  if(pct>=80) return '🎉 Ótimo trabalho! Você tem excelente domínio do conteúdo. Continue praticando!';
+  if(pct>=60) return '👍 Bom desempenho! Você está no caminho certo. Revise os temas que errou.';
+  if(pct>=40) return '📚 Você está progredindo! Estude um pouco mais e tente novamente.';
+  return '💪 Continue praticando! Cada tentativa é um aprendizado. Você vai melhorar!';
+}
+
+// HISTÓRICO
+async function saveScore(name,correct,total,helps,prize){
+  var diffLabel=state.userDifficulty==='facil'?'Fácil 😊':state.userDifficulty==='medio'?'Médio 🎯':'Difícil 🔥';
+  var entry={name:name||'Anônimo',correct:correct,total:total,helps:helps,prize:prize,
+    pct:Math.round(correct/total*100),diff:diffLabel,
+    date:new Date().toLocaleDateString('pt-BR'),ts:Date.now()};
+  if(state.firebaseUrl){
+    await fbSaveScore(entry);
+  }
+  try{
+    var h=JSON.parse(localStorage.getItem('show_history')||'[]');
+    h.push(entry);
+    h.sort(function(a,b){return b.correct!==a.correct?b.correct-a.correct:a.helps-b.helps;});
+    h=h.slice(0,50);
+    localStorage.setItem('show_history',JSON.stringify(h));
+  }catch(e){}
+}
+function buildHistoryHtml(h,shared){
+  if(!h.length)return '<div class="hist-empty">Nenhuma partida registrada ainda.</div>';
+  var badge=shared
+    ?'<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px"><span style="font-size:.68rem;color:var(--green);font-family:var(--font-hud);letter-spacing:.08em">● HISTÓRICO COMPARTILHADO</span></div>'
+    :'<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px"><span style="font-size:.68rem;color:var(--muted);font-family:var(--font-hud);letter-spacing:.08em">○ HISTÓRICO LOCAL (configure Firebase para compartilhar)</span></div>';
+  var rows='';
+  h.forEach(function(item,i){
+    var r=i+1;
+    var rc=r===1?'r1':r===2?'r2':r===3?'r3':'';
+    var ri=r===1?'🥇':r===2?'🥈':r===3?'🥉':r;
+    rows+='<div class="hist-item">';
+    rows+='<div class="hist-rank '+rc+'">'+ri+'</div>';
+    rows+='<div class="hist-info"><div class="hist-name">'+item.name+'</div>';
+    rows+='<div class="hist-meta">'+item.correct+'/'+item.total+' acertos • '+(item.diff||'')+(item.diff?' • ':'')+item.helps+' ajuda(s) • '+item.date+'</div></div>';
+    rows+='<div class="hist-score"><div class="hist-pts">'+fmt(item.prize)+'</div>';
+    rows+='<div class="hist-pct">'+item.pct+'%</div></div></div>';
+  });
+  return badge+rows;
+}
+async function renderHistory(){
+  var el=document.getElementById('historyList');
+  el.innerHTML='<div class="hist-empty" style="padding:20px 0">⏳ Carregando...</div>';
+  var h=null,shared=false;
+  if(state.firebaseUrl){
+    h=await fbLoadHistory();
+    if(h){shared=true;}
+  }
+  if(!h){
+    try{h=JSON.parse(localStorage.getItem('show_history')||'[]');}catch(e){h=[];}
+  }
+  h.sort(function(a,b){return b.correct!==a.correct?b.correct-a.correct:a.helps-b.helps;});
+  el.innerHTML=buildHistoryHtml(h,shared);
+}
+function confirmClearHistory(){
+  var msg=state.firebaseUrl
+    ?'<p>Apagar o histórico <b style="color:var(--gold)">compartilhado</b> de todos os dispositivos? Esta ação não pode ser desfeita.</p>'
+    :'<p>Apagar todo o histórico de pontuações? Esta ação não pode ser desfeita.</p>';
+  showModal('🗑️ Limpar histórico',msg,
+    [{label:'Sim, limpar tudo',action:async function(){
+      if(state.firebaseUrl)await fbClearHistory();
+      try{localStorage.removeItem('show_history');}catch(e){}
+      closeModal();showToast('Histórico limpo!');
+    }},{label:'Cancelar',action:closeModal}]);
+}
+
+// INÍCIO DO JOGO
+function startGame(){
+  if(!state.published){showToast('Nenhum conteúdo disponível!');return;}
+  var nm=document.getElementById('playerName').value.trim();
+  if(!nm){
+    document.getElementById('playerName').focus();
+    document.getElementById('playerName').style.borderColor='var(--red)';
+    showToast('⚠️ Digite seu nome para continuar!');
+    setTimeout(function(){document.getElementById('playerName').style.borderColor='';},2000);
+    return;
+  }
+  state.playerName=nm;
+  showScreen('loading');
+  generateQuestions();
+}
+
+// Chamada pura à API Gemini — usada tanto na publicação quanto no modo legado
+async function callGeminiAPI(files,qty,diff,setStep){
+  setStep=setStep||function(){};
+  var ak=state.apiKey||'';
+  if(!ak)throw new Error('Chave de API não configurada. Vá em Área do Responsável.');
+
+  var dm={
+    facil:[
+      'NÍVEL DE DIFICULDADE: FÁCIL.',
+      'As questões devem ser simples e diretas, testando memorização e reconhecimento básico do conteúdo.',
+      'O enunciado deve deixar clara a resposta para quem leu o material.',
+      'As alternativas erradas devem ser claramente incorretas e facilmente descartadas.',
+      'Vocabulário simples, frases curtas.'
+    ].join(' '),
+    medio:[
+      'NÍVEL DE DIFICULDADE: MÉDIO.',
+      'As questões devem exigir compreensão e interpretação, não apenas memorização.',
+      'O aluno precisa ter estudado para distinguir a resposta correta.',
+      'As alternativas erradas devem ser plausíveis mas incorretas para quem entendeu o conteúdo.',
+      'Pode exigir relacionar dois conceitos do material.'
+    ].join(' '),
+    dificil:[
+      'NÍVEL DE DIFICULDADE: DIFÍCIL.',
+      'As questões devem exigir análise, inferência e raciocínio aprofundado sobre o conteúdo.',
+      'As alternativas devem ser muito próximas — apenas uma é inequivocamente correta.',
+      'O enunciado pode envolver situações-problema ou aplicação prática do conteúdo.',
+      'Evite questões que a resposta esteja explícita no texto; prefira questões que exijam dedução.'
+    ].join(' ')
+  };
+
+  var sp=[
+    'Você é especialista em avaliações educacionais.',
+    dm[diff]||dm.medio,
+    '',
+    'REGRAS OBRIGATÓRIAS:',
+    '1. Gere EXATAMENTE '+qty+' questões baseadas SOMENTE no conteúdo fornecido.',
+    '2. Cada questão deve ter: enunciado, a, b, c, d, gabarito, povo, universitarios e explicacao.',
+    '3. gabarito deve ser apenas A, B, C ou D.',
+    '4. Distribua os gabaritos de forma equilibrada entre A, B, C e D.',
+    '5. povo deve conter percentuais numéricos para A, B, C e D, somando 100.',
+    '6. universitarios deve ser uma dica curta, sem revelar diretamente a resposta.',
+    '7. explicacao deve ser uma explicação clara e didática de 1-2 frases sobre por que o gabarito é correto, adequada para alunos do ensino fundamental.',
+    '8. Retorne somente JSON válido. Não use markdown, comentários, texto antes ou texto depois.'
+  ].join('\n');
+
+  var parts=[];
+  files.forEach(function(f){
+    if(f.type==='pdf'){
+      parts.push({inline_data:{mime_type:'application/pdf',data:f.content}});
+    }else{
+      parts.push({text:'=== '+f.name+' ===\n'+f.content+'\n'});
+    }
+  });
+  parts.push({text:'Gere exatamente '+qty+' questões de múltipla escolha no formato JSON solicitado.'});
+
+  var questionSchema={
+    type:'OBJECT',
+    properties:{
+      questoes:{
+        type:'ARRAY',
+        items:{
+          type:'OBJECT',
+          properties:{
+            enunciado:{type:'STRING'},
+            a:{type:'STRING'},
+            b:{type:'STRING'},
+            c:{type:'STRING'},
+            d:{type:'STRING'},
+            gabarito:{type:'STRING',enum:['A','B','C','D']},
+            povo:{
+              type:'OBJECT',
+              properties:{A:{type:'NUMBER'},B:{type:'NUMBER'},C:{type:'NUMBER'},D:{type:'NUMBER'}},
+              required:['A','B','C','D']
+            },
+            universitarios:{type:'STRING'},
+            explicacao:{type:'STRING'}
+          },
+          required:['enunciado','a','b','c','d','gabarito','povo','universitarios','explicacao']
+        }
+      }
+    },
+    required:['questoes']
+  };
+
+  function buildBody(mode){
+    var maxTokens=qty<=10?8192:(qty<=20?16384:24576);
+    var gen={maxOutputTokens:maxTokens,temperature:0.25,topP:0.9};
+    if(mode==='schema'){
+      gen.responseMimeType='application/json';
+      gen.responseSchema=questionSchema;
+    }else if(mode==='json'){
+      gen.responseMimeType='application/json';
+    }
+    return {system_instruction:{parts:[{text:sp}]},contents:[{role:'user',parts:parts}],generationConfig:gen};
+  }
+
+  function stripJsonFences(raw){
+    return (raw||'')
+      .replace(/^\s*```json\s*/i,'')
+      .replace(/^\s*```\s*/,'')
+      .replace(/```\s*$/,'')
+      .trim();
+  }
+
+  function parseJson(raw){
+    var s=stripJsonFences(raw);
+    if(!s)throw new Error('Resposta vazia da IA.');
+    try{return JSON.parse(s);}catch(e1){}
+
+    // Alguns modelos ainda devolvem texto junto com o JSON; extrai o maior objeto possível.
+    var i1=s.indexOf('{'),i2=s.lastIndexOf('}');
+    if(i1>=0&&i2>i1){
+      try{return JSON.parse(s.slice(i1,i2+1));}catch(e2){}
+    }
+
+    // Fallback para quando vier apenas um array de questões.
+    var ia=s.indexOf('['),ib=s.lastIndexOf(']');
+    if(ia>=0&&ib>ia){
+      try{return {questoes:JSON.parse(s.slice(ia,ib+1))};}catch(e3){}
+    }
+
+    throw new Error('Formato inválido. A IA começou a responder assim: "'+s.substring(0,180)+'"');
+  }
+
+  function cleanText(v){return ((v==null?'':v)+'').replace(/\s+/g,' ').trim();}
+
+  function normalizePovo(povo,correct){
+    var keys=['A','B','C','D'];
+    var out={A:0,B:0,C:0,D:0};
+    keys.forEach(function(k){out[k]=Number(povo&&povo[k])||0;});
+    var sum=keys.reduce(function(a,k){return a+out[k];},0);
+    if(sum<=0){
+      out={A:20,B:20,C:20,D:20};
+      out[correct]=40;
+      sum=100;
+    }
+    var acc=0;
+    keys.forEach(function(k,i){
+      if(i<keys.length-1){out[k]=Math.max(0,Math.round(out[k]*100/sum));acc+=out[k];}
+      else{out[k]=Math.max(0,100-acc);}
+    });
+    return out;
+  }
+
+  function normalizeQuestions(parsed){
+    var qs=parsed.questoes||parsed.questions||(Array.isArray(parsed)?parsed:null);
+    if(!Array.isArray(qs)||!qs.length){
+      throw new Error('Nenhuma questão válida retornada. Verifique se o arquivo tem conteúdo legível.');
+    }
+    var normalized=qs.map(function(q){
+      var g=cleanText(q.gabarito||q.resposta||q.answer||q.correct||'A').toUpperCase()[0]||'A';
+      if(['A','B','C','D'].indexOf(g)<0)g='A';
+      return {
+        enunciado:cleanText(q.enunciado||q.pergunta||q.question),
+        a:cleanText(q.a||q.A||q.alternativa_a||q.alternativaA),
+        b:cleanText(q.b||q.B||q.alternativa_b||q.alternativaB),
+        c:cleanText(q.c||q.C||q.alternativa_c||q.alternativaC),
+        d:cleanText(q.d||q.D||q.alternativa_d||q.alternativaD),
+        gabarito:g,
+        povo:normalizePovo(q.povo||q.poll,g),
+        universitarios:cleanText(q.universitarios||q.hint||q.dica||'Observe o conceito central trabalhado no conteúdo.'),
+        explicacao:cleanText(q.explicacao||q.explanation||q.justificativa||'')
+      };
+    }).filter(function(q){return q.enunciado&&q.a&&q.b&&q.c&&q.d;});
+
+    if(!normalized.length)throw new Error('Nenhuma questão válida. Tente novamente.');
+    return normalized.slice(0,qty);
+  }
+
+  var PREFERRED=['gemini-2.5-flash','gemini-2.5-flash-lite','gemini-2.0-flash'];
+  var models=[];
+  try{
+    var mr=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+encodeURIComponent(ak));
+    if(mr.ok){
+      var md=await mr.json();
+      var all=(md.models||[]).map(function(m){return m.name.replace('models/','');});
+      PREFERRED.forEach(function(p){if(all.indexOf(p)>=0)models.push(p);});
+    }
+  }catch(e){}
+  if(!models.length)models=PREFERRED.slice();
+
+  var modes=['schema','json','plain'];
+  var lastErr='';
+
+  for(var mi=0;mi<models.length;mi++){
+    for(var oi=0;oi<modes.length;oi++){
+      var model=models[mi],mode=modes[oi];
+      setStep('Consultando IA...','Modelo: '+model+(mode==='schema'?' · JSON estruturado':mode==='json'?' · JSON':' · compatível'));
+      try{
+        var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent?key='+encodeURIComponent(ak),{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify(buildBody(mode))
+        });
+        if(!r.ok){
+          var ej=await r.json().catch(function(){return{};});
+          var msg=(ej&&ej.error&&ej.error.message)||'Erro HTTP '+r.status;
+          if(r.status===401||r.status===403)throw new Error(msg);
+          lastErr=msg;
+          continue;
+        }
+
+        var data=await r.json();
+        var cand=data.candidates&&data.candidates[0];
+        if(!cand){
+          var blockReason=(data.promptFeedback&&data.promptFeedback.blockReason)||'';
+          throw new Error('Resposta vazia da IA'+(blockReason?' — bloqueado: '+blockReason:''));
+        }
+        if(cand.finishReason&&cand.finishReason==='MAX_TOKENS'){
+          throw new Error('A IA cortou a resposta por limite de tokens. Reduza a quantidade de questões ou use um arquivo menor.');
+        }
+        if(cand.finishReason&&cand.finishReason!=='STOP'){
+          throw new Error('Resposta bloqueada ou interrompida pela IA ('+cand.finishReason+'). Tente outro conteúdo.');
+        }
+
+        var raw='';
+        if(cand.content&&cand.content.parts){
+          raw=cand.content.parts.map(function(p){return p.text||'';}).join('');
+        }
+        console.log('[Gemini] raw (300 chars):',raw.substring(0,300));
+        return normalizeQuestions(parseJson(raw));
+      }catch(fe){
+        lastErr=fe&&fe.message?fe.message:String(fe);
+        if(lastErr.indexOf('API key')>=0||lastErr.indexOf('API_KEY')>=0||lastErr.indexOf('permission')>=0||lastErr.indexOf('denied')>=0){
+          throw fe;
+        }
+        // Tenta próximo modo/modelo automaticamente.
+      }
+    }
+  }
+
+  throw new Error('Não foi possível obter JSON válido da IA após as tentativas. Último erro: '+lastErr);
+}
+
+function shuffle(arr){
+  for(var i=arr.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=arr[i];arr[i]=arr[j];arr[j]=t;}
+  return arr;
+}
+function launchGame(questions,qty){
+  state.questions=shuffle(questions.slice()).slice(0,qty);
+  state.prizes=makePrizes(qty);
+  state.checkpoints=makeCheckpoints(qty);
+  state.current=0;state.score=0;
+  state.helps={'50':true,povo:true,univ:true};state.helpsUsed=0;state.totalTime=0;state.answered=false;
+  buildPrizeLadder();showScreen('game');loadQuestion();
+}
+
+async function generateQuestions(){
+  var pub=state.published;
+  var qty=Math.min(state.userQty,pub.qty);
+  state.timerSecs=pub.timerSecs||30;
+
+  var files=pub.files||[{content:pub.content,type:pub.type,name:pub.name}];
+  var hasFiles=files&&files.length&&files[0]&&files[0].content;
+
+  // Se API key disponível e conteúdo armazenado → gera ao vivo no nível escolhido pelo aluno
+  if(state.apiKey&&hasFiles){
+    var nomeNivel=state.userDifficulty==='facil'?'Fácil 😊':state.userDifficulty==='medio'?'Médio 🎯':'Difícil 🔥';
+    document.getElementById('loaderTxt').textContent='Gerando questões...';
+    document.getElementById('loaderStep').textContent='Nível: '+nomeNivel;
+    try{
+      var questions=await callGeminiAPI(files,qty,state.userDifficulty,function(txt,sub){
+        document.getElementById('loaderTxt').textContent=txt;
+        document.getElementById('loaderStep').textContent=sub;
+      });
+      launchGame(questions,qty);
+      return;
+    }catch(err){
+      console.error(err);
+      var isAuthErr=err.message.indexOf('Chave')>=0||err.message.indexOf('401')>=0||err.message.indexOf('403')>=0||err.message.indexOf('API_KEY')>=0;
+      if(isAuthErr){
+        showModal('Erro de autenticação',
+          '<p>Chave de API inválida.<br>Vá em <b>Área do Responsável</b> e corrija a chave.</p>',
+          [{label:'Voltar',action:function(){closeModal();showScreen('home');}}]);
+        return;
+      }
+      // Falha na IA → tenta usar questões pré-geradas como fallback
+      if(pub.questions&&pub.questions.length>0){
+        showToast('⚠️ IA indisponível — usando questões do professor');
+        launchGame(pub.questions,qty);
+        return;
+      }
+      showModal('Erro ao gerar questões',
+        '<p>Não foi possível gerar as questões.<br><small style="color:var(--muted);font-size:.7rem">'+err.message+'</small></p>',
+        [{label:'Tentar novamente',action:function(){closeModal();startGame();}},
+         {label:'Voltar',action:function(){closeModal();showScreen('home');}}]);
+      return;
+    }
+  }
+
+  // Sem API key ou sem arquivos → usa questões pré-geradas se disponíveis
+  if(pub.questions&&pub.questions.length>0){
+    document.getElementById('loaderTxt').textContent='Preparando o jogo...';
+    document.getElementById('loaderStep').textContent='Embaralhando questões';
+    await new Promise(function(r){setTimeout(r,600);});
+    launchGame(pub.questions,qty);
+    return;
+  }
+
+  showModal('Sem conteúdo',
+    '<p>Nenhuma questão disponível.<br>Peça ao responsável para publicar o conteúdo com a chave de API configurada.</p>',
+    [{label:'Voltar',action:function(){closeModal();showScreen('home');}}]);
+}
+
+// ESCADA DE PRÊMIOS
+function buildPrizeLadder(){
+  var el=document.getElementById('prizeLadder');el.innerHTML='';
+  state.prizes.slice().reverse().forEach(function(prize,ri){
+    var oi=state.prizes.length-1-ri;
+    var d=document.createElement('div');
+    d.className='ladder-item'+(state.checkpoints.indexOf(oi)>=0?' milestone':'');
+    d.id='ladder-'+oi;
+    d.innerHTML='<span>'+(oi+1)+'</span><span>'+fmt(prize)+'</span>';
+    el.appendChild(d);
+  });
+}
+function updateLadder(){
+  document.querySelectorAll('.ladder-item').forEach(function(el){
+    el.classList.remove('current');
+    var idx=parseInt(el.id.split('-')[1]);
+    if(idx===state.current)el.classList.add('current');
+    else if(idx<state.current)el.classList.add('passed');
+  });
+}
+
+// CARREGAR QUESTÃO
+function loadQuestion(){
+  var q=state.questions[state.current];
+  var num=state.current+1,total=state.questions.length;
+  state.answered=false;
+  document.getElementById('hudQNum').textContent='Questão '+num+' de '+total;
+  document.getElementById('hudPrize').textContent=fmt(state.prizes[state.current]);
+  document.getElementById('qNumLabel').textContent='PERGUNTA '+(num<10?'0'+num:''+num);
+  document.getElementById('questionTxt').textContent=q.enunciado;
+  document.getElementById('progBar').style.width=((num-1)/total*100)+'%';
+  updateLadder();
+  var ep=document.getElementById('explanationPanel');if(ep)ep.classList.remove('show');
+  var c=document.getElementById('altsContainer');c.innerHTML='';
+  ['a','b','c','d'].forEach(function(l){
+    var btn=document.createElement('button');
+    btn.className='alt-btn';btn.id='alt-'+l;
+    btn.innerHTML='<span class="alt-letter">'+l.toUpperCase()+'</span>'+q[l];
+    btn.onclick=function(){answer(l.toUpperCase(),btn);};
+    c.appendChild(btn);
+  });
+  document.getElementById('help50').disabled=!state.helps['50'];
+  document.getElementById('helpPovo').disabled=!state.helps['povo'];
+  document.getElementById('helpUniv').disabled=!state.helps['univ'];
+  startTimer();
+}
+
+// CRONÔMETRO DO JOGO
+function startTimer(){
+  clearInterval(state.timer);
+  state.timeLeft=state.timerSecs;updateTimerUI();
+  state.timer=setInterval(function(){
+    state.timeLeft--;state.totalTime++;updateTimerUI();
+    if(state.timeLeft<=0){clearInterval(state.timer);timeOut();}
+  },1000);
+}
+function updateTimerUI(){
+  var el=document.getElementById('timerNum'),arc=document.getElementById('timerArc'),circ=144.5;
+  el.textContent=state.timeLeft;
+  arc.style.strokeDashoffset=circ-(circ*state.timeLeft/state.timerSecs);
+  var p=state.timeLeft/state.timerSecs;
+  arc.style.stroke=p>.5?'var(--gold)':p>.25?'#ff9800':'var(--red)';
+  el.style.color=p>.25?'var(--white)':'var(--red)';
+}
+function timeOut(){
+  if(state.answered)return;
+  state.answered=true;revealCorrect();
+  setTimeout(function(){endGame(false,true);},1800);
+}
+
+// ANSWER — ao errar encerra e gera novas questões no próximo jogar
+function answer(letter,btn){
+  if(state.answered)return;
+  state.answered=true;
+  clearInterval(state.timer);
+  state.totalTime+=(state.timerSecs-state.timeLeft);
+  var correct=state.questions[state.current].gabarito.toUpperCase();
+  if(letter===correct){
+    btn.classList.add('correct');
+    state.score=state.prizes[state.current];
+    setTimeout(function(){
+      if(state.current===state.questions.length-1)endGame(true,false);
+      else{state.current++;loadQuestion();}
+    },1400);
+  }else{
+    btn.classList.add('wrong');revealCorrect();
+    // Aguarda o aluno ler a explicação e clicar em OK
+  }
+}
+function revealCorrect(){
+  var q=state.questions[state.current];
+  var c=q.gabarito.toUpperCase();
+  var b=document.getElementById('alt-'+c.toLowerCase());
+  if(b)b.classList.add('correct');
+  // Mostra painel de explicação
+  var panel=document.getElementById('explanationPanel');
+  var exCorrect=document.getElementById('explCorrect');
+  var exText=document.getElementById('explText');
+  if(panel&&exCorrect&&exText){
+    var letra=c;
+    var textoCorreto=q[letra.toLowerCase()]||'';
+    exCorrect.textContent='Alternativa '+letra+': '+textoCorreto;
+    exText.textContent=q.explicacao||'Revise o conteúdo relacionado a esta questão.';
+    panel.classList.add('show');
+  }
+}
+
+// AJUDAS
+function useHelp(type){
+  if(!state.helps[type]||state.answered)return;
+  state.helps[type]=false;state.helpsUsed++;
+  document.getElementById('help'+(type==='50'?'50':type==='povo'?'Povo':'Univ')).disabled=true;
+  var q=state.questions[state.current];
+  if(type==='50'){
+    var correct=q.gabarito.toUpperCase();
+    var wrong=['A','B','C','D'].filter(function(l){return l!==correct;});
+    wrong.sort(function(){return .5-Math.random();});wrong=wrong.slice(0,2);
+    wrong.forEach(function(l){
+      var b=document.getElementById('alt-'+l.toLowerCase());
+      if(b){b.classList.add('eliminated');b.disabled=true;}
+    });
+    showToast('50/50 — Duas alternativas eliminadas!');
+  }else if(type==='povo'){
+    var povo=q.povo||{A:40,B:30,C:20,D:10};
+    var bars=['A','B','C','D'].map(function(l){
+      var t=q[l.toLowerCase()];if(t.length>34)t=t.substring(0,33)+'…';
+      return '<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:.76rem;margin-bottom:3px"><span><b>'+l+')</b> '+t+'</span><b>'+(povo[l]||0)+'%</b></div><div style="background:rgba(255,255,255,.07);border-radius:4px;height:7px"><div style="width:'+(povo[l]||0)+'%;height:100%;border-radius:4px;background:'+(l===q.gabarito.toUpperCase()?'var(--green)':'var(--cyan)')+';"></div></div></div>';
+    }).join('');
+    showModal('👥 Opinião do Povo','<p style="margin-bottom:10px;font-size:.84rem">O que as pessoas responderam:</p>'+bars,[{label:'Entendido!',action:closeModal}]);
+  }else{
+    var exp=q.universitarios||'A resposta está nos conceitos fundamentais do conteúdo.';
+    showModal('🎓 Ajuda dos Especialistas','<div class="card-help"><div class="card-help-title">Dica dos especialistas:</div><div class="card-help-txt">'+exp+'</div></div>',[{label:'Entendido!',action:closeModal}]);
+  }
+}
+
+// FIM DE JOGO
+function endGame(won,timeout){
+  clearInterval(state.timer);
+  var guaranteed=0;
+  if(!won&&!timeout){
+    for(var ci=0;ci<state.checkpoints.length;ci++){
+      if(state.current>state.checkpoints[ci])guaranteed=state.prizes[state.checkpoints[ci]];
+    }
+  }
+  var finalPrize=won?state.prizes[state.questions.length-1]:guaranteed;
+  var correct=state.current+(won?1:0);
+  var total=state.questions.length;
+  var pct=Math.round(correct/total*100);
+
+  saveScore(state.playerName,correct,total,state.helpsUsed,finalPrize);
+
+  // Atualiza progresso e verifica medalhas
+  state.totalAnswered+=total;
+  var newMedals=checkMedals(state.totalAnswered);
+  var dailyEarned=checkDailyChallenge(correct);
+  if(dailyEarned){var dm=MEDALS.find(function(m){return m.id==='diario';});if(dm)newMedals.push(dm);}
+  saveProgress();
+  renderMedals();
+  _recordDailyAnswers(total);
+  checkAutoDifficulty(pct);
+
+  document.getElementById('resultPlayer').textContent=state.playerName.toUpperCase();
+  document.getElementById('statCorrect').textContent=correct+'/'+total;
+  document.getElementById('statPct').textContent=pct+'%';
+  document.getElementById('statHelps').textContent=state.helpsUsed;
+  document.getElementById('resultPrize').textContent=fmt(finalPrize);
+
+  // Feedback personalizado
+  var fb=document.getElementById('resultFeedback');
+  if(fb){fb.textContent=getPersonalizedFeedback(pct);fb.style.display='block';}
+
+  // Exibe novas medalhas conquistadas
+  var nm=document.getElementById('resultNewMedals');
+  if(nm){
+    nm.innerHTML=newMedals.length?newMedals.map(function(m){
+      return '<div class="new-medal-item">'+
+        '<span class="nmi-icon">'+m.icon+'</span>'+
+        '<div><div class="nmi-txt">'+m.name+' desbloqueada! 🎉</div>'+
+        '<div class="nmi-sub">'+m.desc+'</div></div>'+
+      '</div>';
+    }).join(''):'';
+  }
+
+  if(won){
+    document.getElementById('resultEmoji').textContent='🏆';
+    document.getElementById('resultTitle').textContent='PARABÉNS, CAMPEÃO!';
+    document.getElementById('resultSub').textContent='Você acertou tudo!';
+    spawnConfetti();
+  }else if(timeout){
+    document.getElementById('resultEmoji').textContent='⏰';
+    document.getElementById('resultTitle').textContent='Tempo Esgotado!';
+    document.getElementById('resultSub').textContent='Você saiu com '+fmt(guaranteed);
+  }else{
+    document.getElementById('resultEmoji').textContent=finalPrize>0?'💰':'😢';
+    document.getElementById('resultTitle').textContent=finalPrize>0?'Quase lá!':'Não foi dessa vez!';
+    document.getElementById('resultSub').textContent=finalPrize>0?'Prêmio garantido conquistado!':'Estude mais e tente novamente!';
+  }
+  showScreen('result');
+}
+
+// Jogar novamente gera novas questões (sem repetir a mesma sequência)
+function restartGame(){
+  state.current=0;state.score=0;
+  state.helps={'50':true,povo:true,univ:true};state.helpsUsed=0;state.totalTime=0;
+  showScreen('loading');generateQuestions();
+}
+function goHome(){showScreen('home');}
+
+// CONFETE
+function spawnConfetti(){
+  var w=document.getElementById('confettiWrap');w.innerHTML='';
+  var cols=['#f5c518','#ffd700','#00e5ff','#00e676','#ff6b6b','#ff9800','#fff'];
+  for(var i=0;i<120;i++){
+    var c=document.createElement('div');c.className='conf';
+    c.style.cssText='left:'+Math.random()*100+'%;background:'+cols[Math.floor(Math.random()*cols.length)]+';--dur:'+(Math.random()*2+2)+'s;--delay:'+(Math.random()*2)+'s;width:'+(Math.random()*8+4)+'px;height:'+(Math.random()*12+6)+'px;transform:rotate('+Math.random()*360+'deg)';
+    w.appendChild(c);
+  }
+}
+
+// PROFESSOR IA — CHAT
+var chatHistory=[];
+
+async function sendChatMessage(){
+  var input=document.getElementById('chatInput');
+  var msg=(input.value||'').trim();
+  if(!msg)return;
+
+  if(!state.apiKey){
+    addChatMessage('ai','⚠️ O Professor Lobo precisa de uma Chave de API configurada. Peça ao seu professor para configurar no <b>Painel do Responsável</b>.');
+    input.value='';return;
+  }
+
+  addChatMessage('user',msg);
+  input.value='';
+  var btn=document.getElementById('chatSendBtn');
+  if(btn)btn.disabled=true;
+
+  // Indicador de digitação
+  var typingDiv=document.createElement('div');
+  typingDiv.className='chat-msg ai chat-typing-wrap';typingDiv.id='chatTyping';
+  typingDiv.innerHTML='<div class="chat-typing"><div class="chat-dot"></div><div class="chat-dot"></div><div class="chat-dot"></div></div>';
+  var msgs=document.getElementById('chatMessages');
+  if(msgs){msgs.appendChild(typingDiv);scrollChatToBottom();}
+
+  chatHistory.push({role:'user',parts:[{text:msg}]});
+  if(chatHistory.length>20)chatHistory=chatHistory.slice(-20);
+
+  try{
+    var sp=[
+      'Você é um professor amigável, paciente e encorajador do 6º ano do ensino fundamental brasileiro.',
+      'Matérias que você domina: Matemática (frações, equações, multiplicação, divisão, geometria básica), Português (concordância verbal, interpretação de texto, ortografia, gramática), Ciências (ecossistemas, anatomia humana, propriedades da matéria, seres vivos), História e Geografia do Brasil.',
+      '',
+      'Regras:',
+      '1. Use linguagem simples e divertida para crianças de 11-12 anos.',
+      '2. Dê exemplos práticos e do cotidiano.',
+      '3. Seja sempre encorajador. Nunca deixe o aluno desanimado.',
+      '4. Responda em português do Brasil.',
+      '5. Seja conciso: máximo 4 parágrafos curtos.',
+      '6. Use emojis com moderação para tornar as respostas mais divertidas.',
+      '7. Se a pergunta não for sobre conteúdo escolar do 6º ano, redirecione gentilmente: "Ótima curiosidade! Mas minha especialidade são as matérias do 6º ano. Posso te ajudar com...?"'
+    ].join('\n');
+
+    var body={
+      system_instruction:{parts:[{text:sp}]},
+      contents:chatHistory,
+      generationConfig:{maxOutputTokens:1024,temperature:0.65}
+    };
+
+    var models=['gemini-2.5-flash','gemini-2.0-flash','gemini-1.5-flash'];
+    var data=null;
+    var lastErr='';
+    for(var mi=0;mi<models.length;mi++){
+      try{
+        var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+models[mi]+':generateContent?key='+encodeURIComponent(state.apiKey),
+          {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        data=await r.json();
+        if(data.error){
+          lastErr=data.error.message||JSON.stringify(data.error);
+          // Erros de autenticação: não adianta tentar outros modelos
+          if(data.error.code===401||data.error.code===403||/API_KEY|permission|invalid/i.test(lastErr)){
+            break;
+          }
+          data=null;continue;
+        }
+        break; // sucesso
+      }catch(e){lastErr=e.message;data=null;}
+    }
+    var t=document.getElementById('chatTyping');if(t)t.remove();
+    var reply='';
+    if(data&&data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts){
+      reply=data.candidates[0].content.parts.map(function(p){return p.text||'';}).join('');
+    }else{
+      reply='❌ '+(lastErr||'Não foi possível obter resposta. Tente novamente.');
+    }
+    if(reply){chatHistory.push({role:'model',parts:[{text:reply}]});}
+    addChatMessage('ai',reply||'❌ Resposta vazia. Tente novamente.');
+  }catch(e){
+    var t=document.getElementById('chatTyping');if(t)t.remove();
+    addChatMessage('ai','❌ Erro: '+e.message);
+  }
+  if(btn)btn.disabled=false;
+  input.focus();
+}
+
+function addChatMessage(role,text){
+  var msgs=document.getElementById('chatMessages');
+  if(!msgs)return;
+  var d=document.createElement('div');
+  d.className='chat-msg '+role;
+  var now=new Date();
+  var time=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+  d.innerHTML='<div class="chat-bubble">'+text.replace(/\n/g,'<br>')+'</div><span class="chat-time">'+time+'</span>';
+  msgs.appendChild(d);
+  scrollChatToBottom();
+}
+
+function scrollChatToBottom(){
+  var msgs=document.getElementById('chatMessages');
+  if(msgs)setTimeout(function(){msgs.scrollTop=msgs.scrollHeight;},50);
+}
+
+function insertChip(text){
+  var inp=document.getElementById('chatInput');
+  if(inp){inp.value=text;inp.focus();}
+}
+
+// GRÁFICO DE DESEMPENHO
+async function renderStats(){
+  var h=[];
+  if(state.firebaseUrl){var fh=await fbLoadHistory();if(fh&&fh.length)h=fh;}
+  if(!h.length){try{h=JSON.parse(localStorage.getItem('show_history')||'[]');}catch(e){h=[];}}
+  h.sort(function(a,b){return (a.ts||0)-(b.ts||0);});
+
+  // Cartões de resumo
+  var cards=document.getElementById('statsCards');
+  if(cards){
+    var total=h.length;
+    var avgPct=total?Math.round(h.reduce(function(s,e){return s+(e.pct||0);},0)/total):0;
+    var bestPct=total?Math.max.apply(null,h.map(function(e){return e.pct||0;})):0;
+    cards.innerHTML=[
+      {val:total,      lbl:'Partidas jogadas'},
+      {val:avgPct+'%', lbl:'Média de acertos'},
+      {val:bestPct+'%',lbl:'Melhor resultado'},
+      {val:state.totalAnswered, lbl:'Questões respondidas'}
+    ].map(function(c){
+      return '<div class="stat-card"><div class="stat-card-val">'+c.val+'</div><div class="stat-card-lbl">'+c.lbl+'</div></div>';
+    }).join('');
+  }
+
+  // Gráfico de barras
+  var chartEl=document.getElementById('chartBars');
+  if(chartEl){
+    var last=h.slice(-10);
+    if(!last.length){
+      chartEl.innerHTML='<div style="color:var(--muted);font-size:.8rem;text-align:center;width:100%;align-self:center">Nenhuma partida registrada ainda.</div>';
+    }else{
+      var maxPct=Math.max.apply(null,last.map(function(e){return e.pct||0;}))||100;
+      chartEl.innerHTML=last.map(function(e){
+        var barH=Math.max(4,Math.round((e.pct||0)/maxPct*100));
+        var cor=(e.pct||0)>=80?'var(--green)':(e.pct||0)>=60?'var(--gold)':(e.pct||0)>=40?'#ff9800':'var(--red)';
+        var dt=(e.date||'').substring(0,5)||'—';
+        return '<div class="chart-bar-wrap">'+
+          '<div class="chart-bar-pct">'+(e.pct||0)+'%</div>'+
+          '<div class="chart-bar" style="height:'+barH+'%;background:'+cor+'"></div>'+
+          '<div class="chart-bar-date">'+dt+'</div>'+
+        '</div>';
+      }).join('');
+    }
+  }
+
+  // Tendência de melhora
+  var trendEl=document.getElementById('statsTrend');
+  if(trendEl){
+    if(h.length>=4){
+      var recent=h.slice(-3).reduce(function(s,e){return s+(e.pct||0);},0)/3;
+      var older=h.slice(-6,-3);
+      if(older.length>=2){
+        var olderAvg=older.reduce(function(s,e){return s+(e.pct||0);},0)/older.length;
+        var diff=recent-olderAvg;
+        var cls,icon,txt;
+        if(diff>5)     {cls='trend-up';     icon='📈';txt='Você está melhorando! +'+Math.round(diff)+'% nas últimas partidas.';}
+        else if(diff<-5){cls='trend-down';  icon='📉';txt='Precisa praticar mais. Continue tentando, você consegue!';}
+        else            {cls='trend-neutral';icon='➡️';txt='Desempenho estável. Tente superar sua média!';}
+        trendEl.innerHTML='<div class="trend-badge '+cls+'">'+icon+' '+txt+'</div>';
+      }else{trendEl.innerHTML='';}
+    }else{trendEl.innerHTML='';}
+  }
+}
+
+// ── DESAFIO DIÁRIO ──────────────────────────────────────────────────────
+var DAILY_GOAL=5;
+var _pendingDiff=null; // {dir:'up'|'down', diff:'facil'|'medio'|'dificil'}
+
+function _todayKey(){
+  return 'show_daily_'+new Date().toLocaleDateString('pt-BR');
+}
+
+function updateDailyChallenge(){
+  var key=_todayKey();
+  var done=0;
+  try{done=parseInt(localStorage.getItem(key)||'0',10);}catch(e){}
+  var pct=Math.min(100,Math.round(done/DAILY_GOAL*100));
+  var fill=document.getElementById('dailyBarFill');
+  var count=document.getElementById('dailyCount');
+  var wrap=document.getElementById('dailyChallenge');
+  if(fill)fill.style.width=pct+'%';
+  if(count)count.textContent=done+'/'+DAILY_GOAL+' questões hoje';
+  if(wrap){
+    if(done>=DAILY_GOAL){
+      wrap.classList.add('daily-done');
+      if(count)count.textContent='✅ Desafio concluído!';
+    }else{
+      wrap.classList.remove('daily-done');
+    }
+  }
+}
+
+function _recordDailyAnswers(n){
+  var key=_todayKey();
+  var done=0;
+  try{done=parseInt(localStorage.getItem(key)||'0',10);}catch(e){}
+  localStorage.setItem(key,done+n);
+  updateDailyChallenge();
+}
+
+// ── SUGESTÃO DE DIFICULDADE ──────────────────────────────────────────────
+var _diffOrder=['facil','medio','dificil'];
+
+function checkAutoDifficulty(pct){
+  var el=document.getElementById('diffSuggestion');
+  if(!el)return;
+  el.className='diff-suggestion'; // reset classes
+  el.style.display='none';
+  _pendingDiff=null;
+
+  var cur=state.userDifficulty||'medio';
+  var idx=_diffOrder.indexOf(cur);
+  var dir=null,next=null,label='';
+
+  if(pct>=85 && idx<2){
+    dir='up'; next=_diffOrder[idx+1];
+    var names={facil:'Fácil',medio:'Médio',dificil:'Difícil'};
+    label='🔥 Ótimo resultado! Tentar '+names[next]+'?';
+  }else if(pct<40 && idx>0){
+    dir='down'; next=_diffOrder[idx-1];
+    var names={facil:'Fácil',medio:'Médio',dificil:'Difícil'};
+    label='💡 Que tal praticar no nível '+names[next]+' primeiro?';
+  }
+
+  if(dir){
+    _pendingDiff={dir:dir,diff:next};
+    el.classList.add(dir);
+    el.textContent=label;
+    el.style.display='flex';
+  }
+}
+
+function applyDiffSuggestion(){
+  if(!_pendingDiff)return;
+  var diff=_pendingDiff.diff;
+  state.userDifficulty=diff;
+  document.querySelectorAll('.diff-btn').forEach(function(b){
+    b.classList.remove('active');
+    if((diff==='facil'&&b.classList.contains('easy'))||
+       (diff==='medio'&&b.classList.contains('medium'))||
+       (diff==='dificil'&&b.classList.contains('hard'))){b.classList.add('active');}
+  });
+  var el=document.getElementById('diffSuggestion');
+  if(el)el.style.display='none';
+  _pendingDiff=null;
+  var nomes={facil:'Fácil',medio:'Médio',dificil:'Difícil'};
+  showToast('Dificuldade alterada para '+nomes[diff]+' 👍');
+}
+
+// ── PAINEL DOS PAIS ──────────────────────────────────────────────────────
+async function doParentLogin(){
+  var pass=(document.getElementById('parentPass').value||'').trim();
+  var err=document.getElementById('parentErr');
+  if(!pass){if(err){err.textContent='Digite a senha.';err.classList.add('show');}return;}
+  if(!state.parentHash){
+    if(err){err.textContent='Senha dos pais não configurada. Peça ao responsável.';err.classList.add('show');}
+    return;
+  }
+  var h=await hashPass(pass);
+  if(h===state.parentHash){
+    if(err)err.classList.remove('show');
+    document.getElementById('parentPass').value='';
+    showScreen('parents');
+  }else{
+    if(err){err.textContent='Senha incorreta.';err.classList.add('show');}
+    document.getElementById('parentPass').value='';
+  }
+}
+
+async function renderParentPanel(){
+  // Busca histórico (Firebase ou localStorage)
+  var h=[];
+  if(state.firebaseUrl){var fh=await fbLoadHistory();if(fh&&fh.length)h=fh;}
+  if(!h.length){try{h=JSON.parse(localStorage.getItem('show_history')||'[]');}catch(e){h=[];}}
+  h.sort(function(a,b){return (b.ts||0)-(a.ts||0);});
+
+  // Cards de resumo
+  var cards=document.getElementById('parentSummaryCards');
+  if(cards){
+    var total=h.length;
+    var avgPct=total?Math.round(h.reduce(function(s,e){return s+(e.pct||0);},0)/total):0;
+    var bestPct=total?Math.max.apply(null,h.map(function(e){return e.pct||0;})):0;
+    var totalQ=state.totalAnswered||0;
+    cards.innerHTML=[
+      {val:total,       lbl:'Total de partidas'},
+      {val:avgPct+'%',  lbl:'Média de acertos'},
+      {val:bestPct+'%', lbl:'Melhor partida'},
+      {val:totalQ,      lbl:'Questões respondidas'}
+    ].map(function(c){
+      return '<div class="stat-card"><div class="stat-card-val">'+c.val+'</div><div class="stat-card-lbl">'+c.lbl+'</div></div>';
+    }).join('');
+  }
+
+  // Lista de partidas
+  var list=document.getElementById('studentsList');
+  if(!list)return;
+  if(!h.length){
+    list.innerHTML='<div class="parents-empty">Nenhuma partida registrada ainda.</div>';
+    return;
+  }
+
+  // Agrupa por nome de aluno
+  var byName={};
+  h.forEach(function(e){
+    var nm=e.name||'Aluno';
+    if(!byName[nm])byName[nm]={name:nm,games:[],total:0,correct:0,best:0};
+    byName[nm].games.push(e);
+    byName[nm].total+=(e.total||0);
+    byName[nm].correct+=(e.correct||0);
+    if((e.pct||0)>byName[nm].best)byName[nm].best=e.pct||0;
+  });
+
+  list.innerHTML=Object.values(byName).map(function(s){
+    var avg=s.games.length?Math.round(s.correct/s.total*100):0;
+    var last=s.games[0];
+    var lastDate=last&&last.date?last.date:'—';
+    var lastPct=last?(last.pct||0)+'%':'—';
+    var medals=state.medals||[];
+    var medalChips=medals.length?medals.map(function(id){
+      var m=MEDALS.find(function(x){return x.id===id;});
+      return m?'<span class="student-medal-chip">'+m.icon+'</span>':'';
+    }).join(''):'<span style="color:var(--muted);font-size:.75rem">Nenhuma ainda</span>';
+
+    return '<div class="student-card">'+
+      '<div class="student-name">'+s.name+'</div>'+
+      '<div class="student-last">Última partida: '+lastDate+' — '+lastPct+'</div>'+
+      '<div class="student-stats">'+
+        '<div class="student-stat"><div class="student-stat-val">'+s.games.length+'</div><div class="student-stat-lbl">Partidas</div></div>'+
+        '<div class="student-stat"><div class="student-stat-val">'+avg+'%</div><div class="student-stat-lbl">Média</div></div>'+
+        '<div class="student-stat"><div class="student-stat-val">'+s.best+'%</div><div class="student-stat-lbl">Melhor</div></div>'+
+        '<div class="student-stat"><div class="student-stat-val">'+s.total+'</div><div class="student-stat-lbl">Questões</div></div>'+
+      '</div>'+
+      '<div class="student-medals">🏅 '+medalChips+'</div>'+
+    '</div>';
+  }).join('');
+}
+
+// INTERFACE
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(function(s){
+    s.classList.add('hidden');
+    s.style.zIndex='1';
+  });
+  var target = document.getElementById('screen-'+name);
+  target.classList.remove('hidden');
+  target.style.zIndex='2';
+  if(name==='history')renderHistory();
+  if(name==='stats')renderStats();
+  if(name==='admin-login'){
+    var hint=document.getElementById('loginHint');
+    var btn=document.getElementById('loginBtn');
+    if(!state.adminHash){
+      if(hint)hint.textContent='Primeira vez? Crie sua senha de administrador abaixo.';
+      if(btn)btn.textContent='Criar senha e entrar';
+    }else{
+      if(hint)hint.textContent='Acesso exclusivo para o responsável pela avaliação.';
+      if(btn)btn.textContent='Entrar';
+    }
+  }
+}
+function showModal(title,bodyHTML,buttons){
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalBody').innerHTML=bodyHTML;
+  var bw=document.getElementById('modalBtns');bw.innerHTML='';
+  buttons.forEach(function(b){
+    var btn=document.createElement('button');btn.className='btn-main';btn.textContent=b.label;btn.onclick=b.action;bw.appendChild(btn);
+  });
+  document.getElementById('overlay').classList.add('show');
+}
+function closeModal(){document.getElementById('overlay').classList.remove('show');}
+var toastT;
+function showToast(msg){
+  var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2800);
+}
+
+// INICIALIZAÇÃO
+(function(){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.add('hidden');});
+  var home=document.getElementById('screen-home');
+  home.classList.remove('hidden');
+  home.style.zIndex='2';
+
+  loadRepo();
+  loadFirebaseUrl(); // lê ?fb= e localStorage
+  loadAppUrl();
+  loadApiKey();        // carrega chave de API salva
+  loadPasswords();     // carrega hashes de senha do Firebase/localStorage
+  loadProgress();      // carrega medalhas e progresso acumulado
+  updateDailyChallenge(); // atualiza widget de desafio diário
+  showWelcome();       // mostra tutorial na primeira visita
+
+  if(state.firebaseUrl){
+    // Mostra "carregando" enquanto busca Firebase
+    var stxt=document.getElementById('statusTxt');
+    if(stxt)stxt.textContent='Carregando conteúdo...';
+    loadPublishedFromFirebase().then(function(){
+      // Se Firebase não trouxe nada, tenta localStorage
+      if(!state.published){
+        try{var s=localStorage.getItem('show_published');if(s){state.published=JSON.parse(s);updateHomeStatus();}}catch(e){}
+      }
+      // Carrega chave de API do Firebase (compartilhada entre dispositivos)
+      if(!state.apiKey){fbLoadApiKey().then(function(k){if(k){state.apiKey=k;try{localStorage.setItem('show_gemini_key',k);}catch(e){}}});}
+    });
+  }else{
+    try{var s=localStorage.getItem('show_published');if(s){state.published=JSON.parse(s);updateHomeStatus();}}catch(e){}
+  }
+})();
+loadTimerSetting();
+</script>
+</body>
+</html>
